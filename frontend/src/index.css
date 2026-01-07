@@ -1,0 +1,24 @@
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: #050b14;
+  overflow-x: hidden;
+}
+
+/* Hex animation background */
+#hexagonCanvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  display: block;
+}
+
+/* React UI above background */
+#root {
+  position: relative;
+  z-index: 1;
+}
