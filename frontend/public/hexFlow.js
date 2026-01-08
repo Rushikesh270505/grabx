@@ -59,8 +59,8 @@ function resizeCanvas() {
 
   for (let i = 0; i < targetLines; i++) {
     flows.push({
-      fromHex: Math.floor(Math.random() * hexes.length),
-      toHex: Math.floor(Math.random() * hexes.length),
+      hex: Math.floor(Math.random() * hexes.length),
+      edge: Math.floor(Math.random() * 6),
       t: Math.random(),
       speed: BASE_SPEED * (0.6 + Math.random() * 1.4),
       colorIndex: i % COLORS.length,
@@ -124,9 +124,9 @@ canvas.addEventListener('click', (e) => {
     }
     
     clickFlows.push({
-      fromHex: nearestHex,
-      toHex: Math.floor(Math.random() * hexes.length),
-      t: 0,
+      hex: nearestHex,
+      edge: Math.floor(Math.random() * 6),
+      t: Math.random(),
       speed: BASE_SPEED * (2.0 + Math.random() * 2.0), // faster for click flows
       colorIndex: Math.floor(Math.random() * COLORS.length),
       isClickFlow: true,
@@ -254,37 +254,25 @@ function animate(now) {
       const clickMul = f.isClickFlow ? (1.5 + f.burstIntensity * 0.5) : 1.0;
       
       f.t += f.speed * dt * pulseMul * clickMul;
-      if (f.t > 1) {
-        f.t -= 1;
-        // Select new random target hexagon
-        f.fromHex = f.toHex;
-        f.toHex = Math.floor(Math.random() * hexes.length);
-      }
+      if (f.t > 1) f.t -= 1;
 
-      // Get center points of hexagons
-      const fromHex = hexes[f.fromHex];
-      const toHex = hexes[f.toHex];
+      const h = hexes[f.hex];
+      const a = h[f.edge];
+      const b = h[(f.edge + 1) % 6];
+      const eased = 0.5 - 0.5 * Math.cos(Math.PI * f.t);
+      const x = a.x + (b.x - a.x) * eased;
+      const y = a.y + (b.y - a.y) * eased;
+
+      // Dynamic segment length based on flow type
+      const segmentLength = f.isClickFlow ? 
+        (0.2 + (pulseActive ? 0.15 : 0)) : 
+        (0.12 + (pulseActive ? 0.08 : 0));
       
-      if (fromHex && toHex) {
-        const fromCenterX = fromHex.reduce((sum, v) => sum + v.x, 0) / 6;
-        const fromCenterY = fromHex.reduce((sum, v) => sum + v.y, 0) / 6;
-        const toCenterX = toHex.reduce((sum, v) => sum + v.x, 0) / 6;
-        const toCenterY = toHex.reduce((sum, v) => sum + v.y, 0) / 6;
-        
-        // Calculate position along the path between hexagons
-        const eased = 0.5 - 0.5 * Math.cos(Math.PI * f.t);
-        const x = fromCenterX + (toCenterX - fromCenterX) * eased;
-        const y = fromCenterY + (toCenterY - fromCenterY) * eased;
-
-        // Draw trail behind the current position
-        const trailLength = 0.15;
-        const prevT = Math.max(0, f.t - trailLength);
-        const prevX = fromCenterX + (toCenterX - fromCenterX) * (0.5 - 0.5 * Math.cos(Math.PI * prevT));
-        const prevY = fromCenterY + (toCenterY - fromCenterY) * (0.5 - 0.5 * Math.cos(Math.PI * prevT));
-        
-        ctx.moveTo(prevX, prevY);
-        ctx.lineTo(x, y);
-      }
+      const sx = a.x + (b.x - a.x) * Math.max(0, f.t - segmentLength);
+      const sy = a.y + (b.y - a.y) * Math.max(0, f.t - segmentLength);
+      
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(x, y);
       
       // Decay burst intensity for click flows
       if (f.isClickFlow && f.burstIntensity > 0.1) {
