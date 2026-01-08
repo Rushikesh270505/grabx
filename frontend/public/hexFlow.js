@@ -265,8 +265,8 @@ function animate(now) {
 
       // Dynamic segment length based on flow type
       const segmentLength = f.isClickFlow ? 
-        (0.2 + (pulseActive ? 0.15 : 0)) : 
-        (0.12 + (pulseActive ? 0.08 : 0));
+        (0.4 + (pulseActive ? 0.2 : 0)) : 
+        (0.25 + (pulseActive ? 0.15 : 0));
       
       const sx = a.x + (b.x - a.x) * Math.max(0, f.t - segmentLength);
       const sy = a.y + (b.y - a.y) * Math.max(0, f.t - segmentLength);
