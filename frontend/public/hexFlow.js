@@ -8,9 +8,9 @@ const BASE_SPEED = 0.45; // units per second
 const BASE_DENSITY = 0.0007; // doubled from 0.00035 for more lines
 
 const COLORS = [
-  { stroke: "rgba(255,255,255,0.95)", glow: "rgba(255,255,255,0.35)", blur: 18 },
-  { stroke: "rgba(0,180,255,0.95)", glow: "rgba(0,150,255,0.28)", blur: 22 },
-  { stroke: "rgba(0,90,200,0.90)", glow: "rgba(0,100,255,0.25)", blur: 25 }
+  { stroke: "rgba(255,255,255,0.85)", glow: "rgba(255,255,255,0.20)", blur: 12 },
+  { stroke: "rgba(0,180,255,0.85)", glow: "rgba(0,150,255,0.15)", blur: 16 },
+  { stroke: "rgba(0,90,200,0.80)", glow: "rgba(0,100,255,0.12)", blur: 18 }
 ];
 
 const hexes = [];
