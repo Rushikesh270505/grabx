@@ -24,6 +24,10 @@ let frameCount = 0;
 let fps = 60;
 let lastFpsUpdate = performance.now();
 
+// Shock wave variables
+let shockWaves = [];
+let nextShockTime = Date.now() + 3000; // First shock after 3 seconds
+
 function resizeCanvas() {
   // cap DPR to reduce workload on high-DPI screens
   const rawDpr = window.devicePixelRatio || 1;
@@ -164,6 +168,25 @@ function generateGrid() {
   console.log('Generated', hexes.length, 'hexagons for canvas size:', canvasWidth, 'x', canvasHeight);
 }
 
+// Create shock wave at random position
+function createShockWave() {
+  const centerX = Math.random() * canvas.width;
+  const centerY = Math.random() * canvas.height;
+  
+  shockWaves.push({
+    x: centerX,
+    y: centerY,
+    radius: 0,
+    maxRadius: 300 + Math.random() * 200,
+    speed: 150 + Math.random() * 100, // pixels per second
+    opacity: 1,
+    color: COLORS[Math.floor(Math.random() * COLORS.length)]
+  });
+  
+  // Schedule next shock wave
+  nextShockTime = Date.now() + 2000 + Math.random() * 3000; // 2-5 seconds interval
+}
+
 function animate(now) {
   // time delta in seconds, capped for stability
   const dt = Math.min(0.04, (now - lastTime) / 1000);
@@ -182,6 +205,23 @@ function animate(now) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   shimmer += dt * 1.8;
+
+  // Create shock waves periodically
+  if (Date.now() > nextShockTime) {
+    createShockWave();
+  }
+
+  // Update shock waves
+  for (let i = shockWaves.length - 1; i >= 0; i--) {
+    const wave = shockWaves[i];
+    wave.radius += wave.speed * dt;
+    wave.opacity = Math.max(0, 1 - (wave.radius / wave.maxRadius));
+    
+    // Remove completed shock waves
+    if (wave.radius > wave.maxRadius) {
+      shockWaves.splice(i, 1);
+    }
+  }
 
   // Enhanced shock pulse logic - more frequent and dramatic
   pulseTimer += dt;
@@ -231,10 +271,28 @@ function animate(now) {
       const f = list[i];
       
       // Enhanced shock multiplier for dramatic movement
+      let shockMul = 1.0;
+      
+      // Apply shock wave effect to flows near shock waves
+      for (const wave of shockWaves) {
+        const h = hexes[f.hex];
+        if (h) {
+          const centerX = h.reduce((sum, v) => sum + v.x, 0) / 6;
+          const centerY = h.reduce((sum, v) => sum + v.y, 0) / 6;
+          const distance = Math.sqrt((centerX - wave.x) ** 2 + (centerY - wave.y) ** 2);
+          
+          // If hexagon is near the shock wave front
+          if (Math.abs(distance - wave.radius) < 50) {
+            const shockIntensity = wave.opacity * (1 - Math.abs(distance - wave.radius) / 50);
+            shockMul = Math.max(shockMul, 1.0 + shockIntensity * 3.0); // Up to 4x speed boost
+          }
+        }
+      }
+      
       const pulseMul = pulseActive ? (2.5 + Math.random() * 1.5) : 1.0;
       const clickMul = f.isClickFlow ? (1.5 + f.burstIntensity * 0.5) : 1.0;
       
-      f.t += f.speed * dt * pulseMul * clickMul;
+      f.t += f.speed * dt * pulseMul * clickMul * shockMul;
       if (f.t > 1) f.t -= 1;
 
       const h = hexes[f.hex];
@@ -263,6 +321,29 @@ function animate(now) {
     ctx.stroke();
   }
 
+  // Render shock waves
+  ctx.globalCompositeOperation = 'lighter';
+  for (const wave of shockWaves) {
+    ctx.strokeStyle = wave.color.stroke;
+    ctx.shadowColor = wave.color.glow;
+    ctx.shadowBlur = wave.color.blur * wave.opacity;
+    ctx.lineWidth = 2 * wave.opacity;
+    ctx.globalAlpha = wave.opacity * 0.6;
+    
+    ctx.beginPath();
+    ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Add inner ring for more dramatic effect
+    if (wave.radius > 20) {
+      ctx.globalAlpha = wave.opacity * 0.3;
+      ctx.lineWidth = 1 * wave.opacity;
+      ctx.beginPath();
+      ctx.arc(wave.x, wave.y, wave.radius - 10, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = 'source-over';
 
   requestAnimationFrame(animate);
