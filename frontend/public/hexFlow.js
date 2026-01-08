@@ -149,13 +149,19 @@ function generateGrid() {
   const step = h * 0.75;
   let row = 0;
 
-  for (let y = -h; y < window.innerHeight + h; y += step) {
+  // Use canvas height instead of window.innerHeight to cover full area
+  const canvasHeight = canvas.height || 2000;
+  const canvasWidth = canvas.width || window.innerWidth;
+
+  for (let y = -h; y < canvasHeight + h; y += step) {
     const offset = row % 2 ? w / 2 : 0;
-    for (let x = -w; x < window.innerWidth + w; x += w) {
+    for (let x = -w; x < canvasWidth + w; x += w) {
       hexes.push(hexVertices(x + offset, y, HEX_SIZE));
     }
     row++;
   }
+  
+  console.log('Generated', hexes.length, 'hexagons for canvas size:', canvasWidth, 'x', canvasHeight);
 }
 
 function animate(now) {
