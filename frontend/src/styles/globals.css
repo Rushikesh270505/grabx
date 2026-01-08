@@ -542,9 +542,8 @@ html, body {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
   width: 100%;
-  min-height: 100vh;
+  height: 100%; /* Use 100% to fill parent */
   z-index: 0; /* bring canvas to front but behind content */
   pointer-events: none;
   display: block;
@@ -557,6 +556,12 @@ html, body {
   image-rendering: -moz-crisp-edges;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: pixelated;
+}
+
+/* Ensure body can contain the full canvas */
+body {
+  position: relative;
+  min-height: 100vh;
 }
 
 /* Ensure content stays above canvas */

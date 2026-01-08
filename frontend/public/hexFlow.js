@@ -34,8 +34,13 @@ function resizeCanvas() {
   const height = Math.max(
     window.innerHeight, 
     document.documentElement.scrollHeight,
-    document.body.scrollHeight
+    document.body.scrollHeight,
+    document.documentElement.offsetHeight,
+    document.body.offsetHeight,
+    2000 // Minimum height to ensure coverage
   );
+  
+  console.log('Canvas height:', height, 'Document scroll height:', document.documentElement.scrollHeight);
   
   canvas.width = Math.round(width * dpr);
   canvas.height = Math.round(height * dpr);
