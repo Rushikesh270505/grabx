@@ -31,7 +31,11 @@ function resizeCanvas() {
   
   // Use full document height to cover entire scrollable area
   const width = window.innerWidth;
-  const height = Math.max(window.innerHeight, document.documentElement.scrollHeight);
+  const height = Math.max(
+    window.innerHeight, 
+    document.documentElement.scrollHeight,
+    document.body.scrollHeight
+  );
   
   canvas.width = Math.round(width * dpr);
   canvas.height = Math.round(height * dpr);
@@ -63,11 +67,8 @@ function resizeCanvas() {
 
 window.addEventListener("resize", resizeCanvas);
 window.addEventListener("scroll", () => {
-  // Recalculate canvas height on scroll in case content changes
-  const newHeight = Math.max(window.innerHeight, document.documentElement.scrollHeight);
-  if (parseInt(canvas.style.height) !== newHeight) {
-    resizeCanvas();
-  }
+  // Always recalculate on scroll to ensure full coverage
+  resizeCanvas();
 });
 
 // ResizeObserver to handle dynamic content changes
@@ -75,6 +76,20 @@ const resizeObserver = new ResizeObserver(() => {
   resizeCanvas();
 });
 resizeObserver.observe(document.body);
+resizeObserver.observe(document.documentElement);
+
+// Also check periodically for content changes
+setInterval(() => {
+  const currentHeight = Math.max(
+    window.innerHeight, 
+    document.documentElement.scrollHeight,
+    document.body.scrollHeight
+  );
+  const canvasHeight = parseInt(canvas.style.height) || 0;
+  if (Math.abs(canvasHeight - currentHeight) > 50) {
+    resizeCanvas();
+  }
+}, 1000);
 
 // Mouse click burst feature
 canvas.addEventListener('click', (e) => {
