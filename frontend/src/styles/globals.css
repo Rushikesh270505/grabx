@@ -5,17 +5,16 @@
   justify-content: space-between;
   align-items: center;
   padding: 22px 60px;
-  background: rgba(14, 17, 22, 0.85);
-  backdrop-filter: blur(10px);
-}
-
-/* Fix navbar to top so it's always visible */
-.navbar {
+  background: rgba(14, 17, 22, 0.95);
+  backdrop-filter: blur(15px);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1110; /* ensure above most UI */
+  z-index: 9999; /* highest z-index to stay above everything */
+  height: 70px; /* fixed height */
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 
 .logo {
@@ -94,14 +93,29 @@
     sans-serif;
 }
 
+/* Smooth scrolling for entire page */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 70px; /* account for fixed navbar */
+  /* Performance optimizations */
+  will-change: scroll-position;
+  contain: layout style paint;
+}
+
 body {
   background: #0e1116;
   color: #ffffff;
+  /* Performance optimizations */
+  will-change: scroll-position;
+  transform: translateZ(0); /* hardware acceleration */
+  backface-visibility: hidden;
+  perspective: 1000;
 }
 
 /* Add top padding equal to navbar height so content isn't hidden */
 body {
-  padding-top: 86px; /* matches navbar height + spacing */
+  padding-top: 70px; /* matches fixed navbar height */
+  min-height: 100vh;
 }
 
 /* ================= BRAND: GRABX ================= */
@@ -529,52 +543,129 @@ html, body {
   inset: 0;
   width: 100vw;
   height: 100vh;
-  z-index: -1; /* keep canvas behind the app */
+  z-index: -1; /* put canvas behind everything */
   pointer-events: none;
   display: block;
+  opacity: 0.6; /* reduced for better content visibility */
+  /* Performance optimizations */
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  image-rendering: optimizeSpeed;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: pixelated;
 }
 
-/* React app above background */
+/* React app above background but below navbar */
 #root {
   position: relative;
-  z-index: 1100; /* raised so UI is visible above animated canvas */
+  z-index: 1; /* above canvas */
+  min-height: 100vh;
 }
 
 /* Ensure direct children of the root are positioned above background */
 #root > * {
   position: relative;
-  z-index: 1101;
+  z-index: 2; /* above canvas */
 }
 
 /* Make sure navbar sits above canvas but remains non-invasive */
 /* (kept fixed earlier; do not override to relative) */
 
 /* ================================
-   READABILITY PANELS
+   GLASS PANELS FOR TEXT AREAS
    ================================ */
 
-.content-panel {
-  background: linear-gradient(
-    rgba(5, 11, 20, 0.78),
-    rgba(5, 11, 20, 0.78)
-  );
-  backdrop-filter: blur(6px);
-  border-radius: 16px;
+.glass-panel {
+  position: relative;
+  border-radius: 18px;
   padding: 32px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)),
+    radial-gradient(120% 140% at 10% 0%, rgba(93,169,255,0.08) 0%, rgba(93,169,255,0.00) 55%),
+    radial-gradient(140% 160% at 90% 10%, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.00) 52%),
+    rgba(8, 12, 20, 0.42);
+  backdrop-filter: blur(24px) saturate(1.15) brightness(0.92);
+  -webkit-backdrop-filter: blur(24px) saturate(1.15) brightness(0.92);
   box-shadow:
-    0 0 0 1px rgba(255,255,255,0.04),
-    0 20px 60px rgba(0,0,0,0.6);
-}
+    0 18px 44px rgba(0,0,0,0.48),
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    inset 0 -1px 0 rgba(255,255,255,0.02);
+  transform: translateZ(0);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+ }
 
-/* Hero text stronger contrast */
-.hero-panel {
-  background: linear-gradient(
-    rgba(5, 11, 20, 0.82),
-    rgba(5, 11, 20, 0.82)
-  );
-  backdrop-filter: blur(8px);
+ .glass-panel:hover {
+  transform: translateY(-1px);
+  border-color: rgba(93,169,255,0.18);
+  box-shadow:
+    0 26px 64px rgba(0,0,0,0.52),
+    0 0 0 1px rgba(93,169,255,0.08),
+    0 0 42px rgba(93,169,255,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    inset 0 -1px 0 rgba(255,255,255,0.02);
+ }
+
+ .glass-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.02) 34%, rgba(255,255,255,0.00) 58%),
+    radial-gradient(90% 70% at 80% 0%, rgba(93,169,255,0.07) 0%, rgba(93,169,255,0.00) 70%),
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.008) 0px, rgba(255,255,255,0.008) 1px, rgba(255,255,255,0.00) 3px, rgba(255,255,255,0.00) 7px);
+  opacity: 0.42;
+ }
+
+ .glass-panel::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.03),
+    0 0 36px rgba(0,120,255,0.04);
+  opacity: 0.28;
+ }
+
+/* Hero text stronger contrast - glass panel */
+ .hero-panel {
+  position: relative;
   padding: 48px 56px;
-  border-radius: 20px;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01)),
+    radial-gradient(120% 140% at 10% 0%, rgba(93,169,255,0.10) 0%, rgba(93,169,255,0.00) 58%),
+    rgba(8, 12, 20, 0.46);
+  backdrop-filter: blur(26px) saturate(1.15) brightness(0.92);
+  -webkit-backdrop-filter: blur(26px) saturate(1.15) brightness(0.92);
+  box-shadow:
+    0 22px 62px rgba(0,0,0,0.50),
+    inset 0 1px 0 rgba(255,255,255,0.11),
+    inset 0 -1px 0 rgba(255,255,255,0.02);
+ }
+
+.content-panel {
+  position: relative;
+  border-radius: 18px;
+  padding: 32px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)),
+    radial-gradient(120% 140% at 10% 0%, rgba(93,169,255,0.07) 0%, rgba(93,169,255,0.00) 56%),
+    rgba(8, 12, 20, 0.42);
+  backdrop-filter: blur(22px) saturate(1.12) brightness(0.90);
+  -webkit-backdrop-filter: blur(22px) saturate(1.12) brightness(0.90);
+  box-shadow:
+    0 16px 40px rgba(0,0,0,0.46),
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 -1px 0 rgba(255,255,255,0.02);
 }
 
 /* Reduce animation brightness under panels */
@@ -594,29 +685,6 @@ html, body {
    PREMIUM PANEL SEPARATION
    ================================ */
 
-.hero-panel {
-  position: relative;
-  border: 1px solid rgba(255,255,255,0.06);
-}
-
-.content-panel {
-  position: relative;
-  border: 1px solid rgba(255,255,255,0.06);
-}
-
-/* Subtle glow edge (very premium) */
-.hero-panel::after,
-.content-panel::after {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  pointer-events: none;
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,0.02),
-    0 0 40px rgba(0,120,255,0.08);
-}
-
 /* ================================
    ANIMATION FADE MASK
    ================================ */
@@ -633,9 +701,9 @@ html, body {
   inset: 0;
   background: radial-gradient(
     circle at center,
-    rgba(5,11,20,0.92) 0%,
-    rgba(5,11,20,0.85) 55%,
-    rgba(5,11,20,0.65) 100%
+    rgba(5,11,20,0.7) 0%,
+    rgba(5,11,20,0.5) 55%,
+    rgba(5,11,20,0.3) 100%
   );
   z-index: 0;
 }
@@ -748,7 +816,7 @@ body::after {
 .compare-section {
   margin-top: 80px;
   display: grid;
-  grid-templateColumns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 48px;
 }
 
@@ -758,10 +826,14 @@ body::after {
   border-radius: 20px;
   background: linear-gradient(
     to bottom,
-    rgba(10,18,30,0.88),
-    rgba(5,11,20,0.96)
+    rgba(10,18,30,0.5),
+    rgba(5,11,20,0.6)
   );
-  box-shadow: 0 30px 90px rgba(0,0,0,0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 
+    0 8px 32px rgba(0,0,0,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.1);
 }
 
 /* Traditional = muted */

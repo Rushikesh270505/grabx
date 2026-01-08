@@ -1,200 +1,388 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import BotModal from '../../components/BotModal';
-import PairChart from '../../components/PairChart';
-import usePrice from '../../hooks/usePrice';
-import { fetchActive, startBotRemote, stopBotRemote } from '../../services/api';
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import PairChart from "../../components/PairChart";
+import BotExplanation from "../../components/BotExplanation";
+import CoinSelector from "../../components/CoinSelector";
+import BotSettings from "../../components/BotSettings";
+import { fetchActive, startBotRemote, stopBotRemote } from "../../services/api";
+import { runBacktest } from "../../utils/backtest";
+import priceStream from "../../services/priceStream";
 
 const ALL_BOTS = [
-  { id: 1, name: 'Scalper', pair: 'BTC/USDT', description: 'Short time-frame trades that capture small price moves across tight spreads. High frequency, low-latency approach ideal for liquid pairs.' },
-  { id: 2, name: 'Mean Reverter', pair: 'ETH/USDT', description: 'Detects temporary price deviations and executes counter-trend trades to profit from reversion to average. Works best in range-bound markets.' },
-  { id: 3, name: 'Trend Follower', pair: 'SOL/USDT', description: 'Follows medium-to-longer trends, adding to positions as momentum continues and exiting on trend weakness. Designed to capture big market moves.' },
-  { id: 4, name: 'Grid Trader', pair: 'ADA/USDT', description: 'Places buy/sell orders in a price grid to profit from oscillations. Excellent for volatile but mean-reverting pairs.' },
-  { id: 5, name: 'Arbitrage', pair: 'BNB/USDT', description: 'Scans multiple venues for price differences and executes near-instant trades to lock in risk-free spreads. Requires fast execution and low fees.' },
-  { id: 6, name: 'Market Maker', pair: 'XRP/USDT', description: 'Provides liquidity by placing passive bids and asks around mid-price, earning spreads while managing inventory risk.' },
-  { id: 7, name: 'Dollar Cost Averager', pair: 'DOT/USDT', description: 'Systematically invests fixed amounts over time to reduce entry timing risk and build positions steadily using market averages.' },
-  { id: 8, name: 'Momentum', pair: 'LTC/USDT', description: 'Enters positions when momentum indicators align and exits on momentum breakdowns. A balance between trend-following and quick reactions.' },
-  { id: 9, name: 'Options Hedger', pair: 'BTC-PERP', description: 'Uses options or perp instruments to hedge directional exposure, capturing premium while limiting downside risk in volatile markets.' }
+  { id: 1, name: "Scalper", pair: "BTC/USDT", description: "Short time-frame trades that capture small price moves across tight spreads." },
+  { id: 2, name: "Mean Reverter", pair: "ETH/USDT", description: "Trades reversions back to average in range-bound markets." },
+  { id: 3, name: "Trend Follower", pair: "SOL/USDT", description: "Follows momentum and trend continuation." },
+  { id: 4, name: "Grid Trader", pair: "ADA/USDT", description: "Places a grid of buy/sell orders to profit from oscillations." },
+  { id: 5, name: "Arbitrage", pair: "BNB/USDT", description: "Captures price differences across venues." },
+  { id: 6, name: "Market Maker", pair: "XRP/USDT", description: "Quotes bids/asks to earn spread while managing inventory." },
+  { id: 7, name: "Dollar Cost Averager", pair: "DOT/USDT", description: "Buys periodically to average entry." },
+  { id: 8, name: "Momentum", pair: "LTC/USDT", description: "Enters on momentum confirmation and exits on weakness." },
+  { id: 9, name: "Options Hedger", pair: "BTC-PERP", description: "Hedges exposure using perp/options style logic." }
 ];
 
 export default function BotDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const botId = Number(id);
-  const bot = ALL_BOTS.find(b => b.id === botId);
-  const [modalOpen, setModalOpen] = useState(false);
+  const bot = useMemo(() => ALL_BOTS.find((b) => b.id === botId), [botId]);
+
   const [activeBots, setActiveBots] = useState([]);
-  const [investment, setInvestment] = useState('100');
-  const [grids, setGrids] = useState(20);
-  const [lower, setLower] = useState('');
-  const [upper, setUpper] = useState('');
   const [starting, setStarting] = useState(false);
-  const livePrice = usePrice(bot ? bot.pair : null);
+  const [selectedPair, setSelectedPair] = useState(null);
+  const [botSettings, setBotSettings] = useState(null);
+  const [buyBuffer, setBuyBuffer] = useState(0.15);
+  const [sellBuffer, setSellBuffer] = useState(0.15);
+  const [initialBotSettings, setInitialBotSettings] = useState(null);
+  const [backtestResult, setBacktestResult] = useState(null);
+  const [backtesting, setBacktesting] = useState(false);
+
+  useEffect(() => {
+    try {
+      priceStream.setBase("wss://fstream.binance.com");
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  function normalizePairToSymbol(p) {
+    if (!p) return null;
+    const raw = String(p).trim();
+    if (!raw) return null;
+    if (raw.includes("/")) return raw.replace("/", "");
+    if (raw.toUpperCase().endsWith("-PERP")) return `${raw.split("-")[0]}USDT`;
+    return raw.replace(/[^A-Z0-9]/gi, "");
+  }
+
+  const configKey = bot ? `botConfig:${bot.id}` : null;
+
+  useEffect(() => {
+    if (!bot || !configKey) return;
+    let cfg = null;
+    try {
+      cfg = JSON.parse(localStorage.getItem(configKey) || "null");
+    } catch {
+      cfg = null;
+    }
+
+    const pairFromCfg = cfg?.pair || null;
+    const defaultPair = normalizePairToSymbol(bot.pair) || "BTCUSDT";
+    setSelectedPair(pairFromCfg || defaultPair);
+    setBuyBuffer(typeof cfg?.buyBuffer === "number" ? cfg.buyBuffer : 0.15);
+    setSellBuffer(typeof cfg?.sellBuffer === "number" ? cfg.sellBuffer : 0.15);
+    setInitialBotSettings(cfg?.settings && typeof cfg.settings === "object" ? cfg.settings : null);
+  }, [botId, configKey]);
+
+  useEffect(() => {
+    if (!bot || !configKey) return;
+    const next = {
+      pair: selectedPair,
+      buyBuffer,
+      sellBuffer,
+      settings: botSettings
+    };
+    try {
+      localStorage.setItem(configKey, JSON.stringify(next));
+    } catch {
+      // ignore
+    }
+  }, [bot, configKey, selectedPair, buyBuffer, sellBuffer, botSettings]);
+
+  // Run backtest when settings change
+  useEffect(() => {
+    if (!bot || !botSettings || !selectedPair) return;
+    
+    const runTest = async () => {
+      setBacktesting(true);
+      try {
+        const result = await runBacktest(
+          { 
+            botType: bot.name,
+            ...botSettings,
+            buyBuffer,
+            sellBuffer
+          },
+          selectedPair,
+          '1h',
+          30
+        );
+        setBacktestResult(result);
+      } catch (error) {
+        console.error('Backtest failed:', error);
+        setBacktestResult({ error: 'Backtest failed' });
+      } finally {
+        setBacktesting(false);
+      }
+    };
+    
+    const timeoutId = setTimeout(runTest, 1000); // Debounce
+    return () => clearTimeout(timeoutId);
+  }, [bot, botSettings, selectedPair, buyBuffer, sellBuffer]);
 
   useEffect(() => {
     let mounted = true;
-    (async ()=>{
-      try{ const remoteActive = await fetchActive(); if (mounted && remoteActive) setActiveBots(remoteActive); }
-      catch(e){ try { setActiveBots(JSON.parse(localStorage.getItem('activeBots') || '[]')); } catch(_){ setActiveBots([]); } }
+    (async () => {
+      try {
+        const act = await fetchActive();
+        if (mounted && Array.isArray(act)) setActiveBots(act);
+      } catch {
+        try {
+          setActiveBots(JSON.parse(localStorage.getItem("activeBots") || "[]"));
+        } catch {
+          setActiveBots([]);
+        }
+      }
     })();
-    return ()=> mounted = false;
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  useEffect(()=>{
-    if (!livePrice) return;
-    // prefill lower/upper if empty
-    if (!lower) setLower((livePrice * 0.98).toFixed(2));
-    if (!upper) setUpper((livePrice * 1.02).toFixed(2));
-  }, [livePrice]);
+  const isActive = bot ? activeBots.some((b) => b.id === bot.id) : false;
 
-  function persistActiveBots(list){
-    localStorage.setItem('activeBots', JSON.stringify(list));
-    setActiveBots(list);
+  function persist(list) {
+    try {
+      localStorage.setItem("activeBots", JSON.stringify(list));
+    } catch {
+      // ignore
+    }
   }
 
-  function startBotLocal(bot){
-    if (activeBots.find(b=>b.id===bot.id)) return;
-    // basic validation
-    const low = Number(lower);
-    const up = Number(upper);
-    const invest = Number(investment);
-    if (!invest || invest <= 0) { alert('Please enter an investment amount > 0'); return; }
-    if (!low || !up || low >= up) { alert('Please set a valid price range where Lower < Upper'); return; }
-
-    if (!confirm(`Start ${bot.name} on ${bot.pair} with ${grids} grids, investment ${invest}?`)) return;
+  async function start() {
+    if (!bot || starting || isActive) return;
+    
+    // Validate minimum investment
+    if (botSettings && botSettings.investment && botSettings.minInvestment) {
+      if (botSettings.investment < botSettings.minInvestment) {
+        alert(`Minimum investment required: ${botSettings.minInvestment} ${botSettings.investmentType || 'USDT'}`);
+        return;
+      }
+    }
+    
     setStarting(true);
-    // call backend if available
-    startBotRemote(bot.id, { investment: invest, grids, lower: low, upper: up }).then(res=>{
-      persistActiveBots([...activeBots, res]);
-    }).catch(()=>{
-      const nb = [...activeBots, { ...bot, startedAt: Date.now(), pnl: 0, investment: invest, grids, lower: low, upper: up }];
-      persistActiveBots(nb);
-    }).finally(()=> setStarting(false));
+    try {
+      const payload = {
+        pair: selectedPair,
+        buyBuffer,
+        sellBuffer,
+        ...(botSettings || {})
+      };
+      const res = await startBotRemote(bot.id, payload);
+      setActiveBots((prev) => {
+        const next = [...prev, res];
+        persist(next);
+        return next;
+      });
+    } catch {
+      setActiveBots((prev) => {
+        const next = [
+          ...prev,
+          {
+            ...bot,
+            startedAt: Date.now(),
+            pnl: 0,
+            pair: selectedPair || bot.pair,
+            config: { buyBuffer, sellBuffer, ...(botSettings || {}) }
+          }
+        ];
+        persist(next);
+        return next;
+      });
+    } finally {
+      setStarting(false);
+    }
   }
 
-  function stopBotLocal(bot){
-    stopBotRemote(bot.id).then(()=>{
-      const nb = activeBots.filter(b=>b.id!==bot.id);
-      persistActiveBots(nb);
-    }).catch(()=>{
-      const nb = activeBots.filter(b=>b.id!==bot.id);
-      persistActiveBots(nb);
+  async function stop() {
+    if (!bot || !isActive) return;
+    try {
+      await stopBotRemote(bot.id);
+    } catch {
+      // ignore
+    }
+
+    setActiveBots((prev) => {
+      const next = prev.filter((b) => b.id !== bot.id);
+      persist(next);
+      return next;
     });
   }
 
-  if (!bot) return (
-    <div style={{ padding: 20, color: '#fff' }}>
-      <h2>Bot not found</h2>
-      <p style={{ color: '#9aa1aa' }}>We couldn't find that bot. <Link to="/bots">Back to bots</Link></p>
-    </div>
-  );
-
-  const isRunning = !!activeBots.find(b=>b.id===bot.id);
-
-  return (
-    <div style={{ padding: 20, color: '#fff' }}>
-      <button style={{ marginBottom: 12 }} onClick={() => navigate(-1)}>← Back</button>
-
-  <div className="detail-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 18 }}>
-        {/* LEFT: large chart and running bots */}
-        <div>
-          <h2 style={{ margin: 0 }}>{bot.name} <span style={{ color: '#9aa1aa', fontSize: 14 }}>— {bot.pair}</span></h2>
-          <div className="card-box" style={{ marginTop: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ color: '#9aa1aa' }}>Current price: <strong>{livePrice ? livePrice.toFixed(2) : '--'}</strong></div>
-              <div style={{ color: '#9aa1aa', fontSize: 13 }}>{bot.pair}</div>
-            </div>
-            <div style={{ marginTop: 12 }}>
-              <PairChart liveSymbol={bot.pair} />
-            </div>
-          </div>
-
-          <section style={{ marginTop: 18 }}>
-            <h3>Currently Running Bots</h3>
-            {activeBots.length === 0 ? (
-              <div style={{ color: '#9aa1aa', marginTop: 10 }}>No bots are running — start one from the right panel.</div>
-            ) : (
-              <div style={{ display: 'grid', gap: 12, marginTop: 10 }}>
-                {activeBots.map(b => (
-                  <div key={b.id} className="running-bot-row card-box">
-                    <div>
-                      <div style={{ fontWeight: 800 }}>{b.name} <span style={{ color: '#9aa1aa', fontWeight: 600 }}>({b.pair})</span></div>
-                      <div style={{ color: '#9aa1aa', fontSize: 13 }}>Started {new Date(b.startedAt).toLocaleString()}</div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontWeight: 800, fontSize: 18 }}>{(b.pnl || 0).toFixed(2)}%</div>
-                      <button className="cta-btn" style={{ marginTop: 8 }} onClick={() => stopBotLocal(b)}>Stop</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
-
-        {/* RIGHT: compact bot cards + settings */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div>
-            <h3 style={{ marginTop: 0 }}>Available Bots</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
-              {ALL_BOTS.map(b => (
-                <div key={b.id} className="small-bot-card card-box" onClick={() => navigate(`/bots/${b.id}`)}>
-                  <div>
-                    <div style={{ fontWeight: 800 }}>{b.name}</div>
-                    <div style={{ color: '#9aa1aa', fontSize: 12 }}>{b.pair}</div>
-                    <div style={{ color: '#cfd3d8', fontSize: 12, marginTop: 6, maxHeight: 40, overflow: 'hidden' }}>{b.description}</div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                    {activeBots.find(x => x.id === b.id) ? (
-                      <button className="cta-btn" onClick={(e) => { e.stopPropagation(); stopBotLocal(b); }}>Stop</button>
-                    ) : (
-                      <>
-                        <button className="cta-btn" onClick={(e) => { e.stopPropagation(); startBotLocal(b); }}>Start</button>
-                        <button style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: '#cfd3d8', padding: '6px 8px', borderRadius: 8 }} onClick={(e) => { e.stopPropagation(); setModalOpen(b); }}>Details</button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="card-box">
-            <h3 style={{ marginTop: 0 }}>Settings for {bot.name}</h3>
-            <div style={{ color: '#cfd3d8', marginTop: 8 }}>{bot.description}</div>
-            <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
-              <label style={{ color: '#9aa1aa' }}>Price Range</label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input value={lower} onChange={(e)=>setLower(e.target.value)} placeholder="Lower" style={{ flex: 1 }} />
-                <input value={upper} onChange={(e)=>setUpper(e.target.value)} placeholder="Upper" style={{ flex: 1 }} />
-              </div>
-
-              <div>
-                <label style={{ color: '#9aa1aa' }}>Number of grids: <strong style={{ color: '#fff' }}>{grids}</strong></label>
-                <input type="range" min={2} max={200} value={grids} onChange={(e)=>setGrids(Number(e.target.value))} />
-              </div>
-
-              <div>
-                <label style={{ color: '#9aa1aa' }}>Investment (USDT)</label>
-                <input value={investment} onChange={(e)=>setInvestment(e.target.value)} style={{ width: '100%' }} />
-              </div>
-
-              <div style={{ display: 'flex', gap: 8 }}>
-                {isRunning ? (
-                  <button className="cta-btn" onClick={() => stopBotLocal(bot)}>Stop</button>
-                ) : (
-                  <button className="cta-btn" disabled={starting} onClick={() => startBotLocal(bot)}>{starting ? 'Starting…' : 'Start'}</button>
-                )}
-
-                <button style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: '#cfd3d8', padding: '8px 12px', borderRadius: 8 }} onClick={() => setModalOpen(true)}>Register / Details</button>
-              </div>
-              { !starting && isRunning && <div style={{ color: '#7fe08a', marginTop: 6 }}>Bot is running</div> }
-            </div>
-          </div>
+  if (!bot) {
+    return (
+      <div style={{ padding: 24, color: "#fff" }}>
+        <div className="glass-panel" style={{ textAlign: "center" }}>
+          <h2 style={{ marginTop: 0 }}>Bot not found</h2>
+          <Link className="cta-btn" to="/bots">
+            Back to Bots
+          </Link>
         </div>
       </div>
+    );
+  }
 
-      <BotModal bot={modalOpen ? bot : null} onClose={() => setModalOpen(false)} />
+  return (
+    <div style={{ padding: 24, color: "#fff" }}>
+      <div style={{ marginBottom: 16 }}>
+        <Link to="/bots" style={{ color: "#5da9ff", textDecoration: "none" }}>
+          Back to Bots
+        </Link>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.25fr) minmax(0, 0.9fr)", gap: 18, alignItems: "start" }}>
+        <div className="glass-panel" style={{ padding: 18 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", marginBottom: 10 }}>
+            <div style={{ minWidth: 0 }}>
+              <h1 style={{ marginTop: 0, marginBottom: 6 }}>{bot.name}</h1>
+              <div style={{ color: "#9aa1aa" }}>{selectedPair || bot.pair}</div>
+            </div>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
+              {isActive ? (
+                <button className="cta-btn" style={{ background: "#f87171", color: "#fff" }} onClick={stop}>
+                  Stop
+                </button>
+              ) : (
+                <button className="cta-btn" onClick={start} disabled={starting}>
+                  {starting ? "Creating..." : "Create"}
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div style={{ color: "#cfd3d8", marginBottom: 14 }}>{bot.description}</div>
+          <PairChart pair={selectedPair || bot.pair} liveSymbol={(selectedPair || "").toLowerCase()} />
+          <div style={{ marginTop: 16 }}>
+            <BotExplanation botName={bot.name} isActive={isActive} />
+          </div>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <CoinSelector selectedPair={selectedPair} onPairChange={setSelectedPair} disabled={false} />
+
+          <div className="glass-panel" style={{ padding: 24 }}>
+            <h3 style={{ fontSize: 20, marginBottom: 18, color: "#5da9ff" }}>Buffers</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 14 }}>
+              <div>
+                <label style={{ display: "block", marginBottom: 8, color: "#cfd3d8", fontSize: 14 }}>
+                  Buy Buffer (%)
+                </label>
+                <input
+                  type="number"
+                  value={buyBuffer}
+                  onChange={(e) => setBuyBuffer(Number(e.target.value))}
+                  min="0"
+                  step="0.01"
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "8px",
+                    color: "#fff",
+                    fontSize: "14px"
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", marginBottom: 8, color: "#cfd3d8", fontSize: 14 }}>
+                  Sell Buffer (%)
+                </label>
+                <input
+                  type="number"
+                  value={sellBuffer}
+                  onChange={(e) => setSellBuffer(Number(e.target.value))}
+                  min="0"
+                  step="0.01"
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "8px",
+                    color: "#fff",
+                    fontSize: "14px"
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <BotSettings
+            botName={bot.name}
+            pair={selectedPair}
+            initialSettings={initialBotSettings}
+            onSettingsChange={setBotSettings}
+          />
+
+          {botSettings && botSettings.investment && botSettings.minInvestment && (
+            <div className="glass-panel" style={{ padding: 16, fontSize: 13 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <span style={{ color: '#9aa1aa' }}>Investment Check</span>
+                <span style={{ color: botSettings.investment >= botSettings.minInvestment ? '#4ade80' : '#f87171', fontWeight: 600 }}>
+                  {botSettings.investment} {botSettings.investmentType || 'USDT'}
+                </span>
+              </div>
+              <div style={{ color: '#9aa1aa', fontSize: 12 }}>
+                Minimum Required: {botSettings.minInvestment} {botSettings.investmentType || 'USDT'}
+              </div>
+              {botSettings.investment < botSettings.minInvestment && (
+                <div style={{ color: '#f87171', fontSize: 12, marginTop: 4 }}>
+                  ⚠️ Increase investment to start bot
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Backtest Results */}
+          {backtestResult && !backtestResult.error && (
+            <div className="glass-panel" style={{ padding: 16, fontSize: 13 }}>
+              <h4 style={{ marginTop: 0, marginBottom: 12, color: '#5da9ff', fontSize: 16 }}>📊 Backtest Results (30 days)</h4>
+              <div style={{ display: 'grid', gap: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#9aa1aa' }}>APR (Annualized)</span>
+                  <span style={{ color: backtestResult.apr >= 0 ? '#4ade80' : '#f87171', fontWeight: 600 }}>
+                    {backtestResult.apr.toFixed(2)}%
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#9aa1aa' }}>Total Return</span>
+                  <span style={{ color: backtestResult.totalReturnPercent >= 0 ? '#4ade80' : '#f87171', fontWeight: 600 }}>
+                    {backtestResult.totalReturnPercent.toFixed(2)}%
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#9aa1aa' }}>Max Drawdown</span>
+                  <span style={{ color: '#f87171', fontWeight: 600 }}>
+                    {backtestResult.maxDrawdown.toFixed(2)}%
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#9aa1aa' }}>Win Rate</span>
+                  <span style={{ color: '#5da9ff', fontWeight: 600 }}>
+                    {backtestResult.winRate.toFixed(1)}%
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#9aa1aa' }}>Total Trades</span>
+                  <span style={{ color: '#cfd3d8', fontWeight: 600 }}>
+                    {backtestResult.trades}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {backtesting && (
+            <div className="glass-panel" style={{ padding: 16, fontSize: 13, textAlign: 'center' }}>
+              <div style={{ color: '#5da9ff' }}>🔄 Running backtest...</div>
+            </div>
+          )}
+
+          {backtestResult?.error && (
+            <div className="glass-panel" style={{ padding: 16, fontSize: 13 }}>
+              <div style={{ color: '#f87171' }}>⚠️ {backtestResult.error}</div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
