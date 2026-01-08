@@ -5,7 +5,7 @@ const ctx = canvas.getContext("2d", { alpha: false }); // performance optimizati
 
 const HEX_SIZE = 25;
 const BASE_SPEED = 0.45; // units per second
-const BASE_DENSITY = 0.00035; // reduced density for better performance
+const BASE_DENSITY = 0.0007; // doubled from 0.00035 for more lines
 
 const COLORS = [
   { stroke: "rgba(255,255,255,0.95)", glow: "rgba(255,255,255,0.35)", blur: 18 },
@@ -55,7 +55,7 @@ function resizeCanvas() {
 
   // scale number of flows by viewport area to maintain consistent density
   const area = window.innerWidth * window.innerHeight;
-  const targetLines = Math.max(3000, Math.floor(area * BASE_DENSITY)); // reduced base count
+  const targetLines = Math.max(6000, Math.floor(area * BASE_DENSITY)); // doubled from 3000
 
   for (let i = 0; i < targetLines; i++) {
     flows.push({
