@@ -9,7 +9,15 @@ const motivationalLines = [
   { text: "24/7 trading never stops, neither should your profits ⏰", emoji: "⏰" },
   { text: "Turn market volatility into your advantage 🎯", emoji: "🎯" },
   { text: "Build wealth while you live your life 🏖️", emoji: "🏖️" },
-  { text: "Smart algorithms, smarter profits 🧠", emoji: "🧠" }
+  { text: "Smart algorithms, smarter profits 🧠", emoji: "🧠" },
+  { text: "Trade like a pro, even when you're a beginner 🌟", emoji: "🌟" },
+  { text: "The market never sleeps, and neither do your bots 🌙", emoji: "🌙" },
+  { text: "Passive income through active trading 💎", emoji: "💎" },
+  { text: "Master the market with AI-powered precision ⚡", emoji: "⚡" },
+  { text: "Your wealth journey starts with automation 🌱", emoji: "🌱" },
+  { text: "Financial freedom is just one bot away 🔓", emoji: "🔓" },
+  { text: "Let algorithms handle the stress while you enjoy life 🍹", emoji: "🍹" },
+  { text: "Transform trading hours into freedom hours ⏳", emoji: "⏳" }
 ];
 
 export default function Home() {
