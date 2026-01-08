@@ -216,6 +216,25 @@ function animate(now) {
 
   ctx.globalCompositeOperation = 'lighter';
 
+  // Draw hexagon outlines first
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.shadowColor = 'rgba(255,255,255,0.05)';
+  ctx.shadowBlur = 4;
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  
+  for (let i = 0; i < hexes.length; i++) {
+    const hex = hexes[i];
+    ctx.moveTo(hex[0].x, hex[0].y);
+    for (let j = 1; j < 6; j++) {
+      ctx.lineTo(hex[j].x, hex[j].y);
+    }
+    ctx.closePath();
+  }
+  ctx.stroke();
+
+  // Now draw flow lines
+
   for (const colorIndexStr in flowsByColor) {
     const colorIndex = Number(colorIndexStr);
     const col = COLORS[colorIndex];
