@@ -1,11 +1,11 @@
-console.log("HEX EDGE FLOW + GRABX BACKGROUND");
+console.log("HEX EDGE FLOW + GRABX BACKGROUND - OPTIMIZED");
 
 const canvas = document.getElementById("hexagonCanvas");
-const ctx = canvas.getContext("2d");
+const ctx = canvas.getContext("2d", { alpha: false }); // performance optimization
 
-const HEX_SIZE = 18;
+const HEX_SIZE = 25;
 const BASE_SPEED = 0.45; // units per second
-const BASE_DENSITY = 0.00045; // lines per pixel (scaled by viewport area)
+const BASE_DENSITY = 0.00035; // reduced density for better performance
 
 const COLORS = [
   { stroke: "rgba(255,255,255,0.85)", glow: "rgba(255,255,255,0.22)", blur: 12 },
@@ -15,28 +15,38 @@ const COLORS = [
 
 const hexes = [];
 const flows = [];
+const clickFlows = []; // new array for click-generated flows
 let shimmer = 0;
 let pulseTimer = 0;
 let pulseActive = false;
 let lastTime = performance.now();
+let frameCount = 0;
+let fps = 60;
+let lastFpsUpdate = performance.now();
 
 function resizeCanvas() {
   // cap DPR to reduce workload on high-DPI screens
   const rawDpr = window.devicePixelRatio || 1;
   const dpr = Math.min(rawDpr, 1.5);
-  canvas.width = Math.round(window.innerWidth * dpr);
-  canvas.height = Math.round(window.innerHeight * dpr);
-  canvas.style.width = window.innerWidth + 'px';
-  canvas.style.height = window.innerHeight + 'px';
+  
+  // Use full document height to cover entire scrollable area
+  const width = window.innerWidth;
+  const height = Math.max(window.innerHeight, document.documentElement.scrollHeight);
+  
+  canvas.width = Math.round(width * dpr);
+  canvas.height = Math.round(height * dpr);
+  canvas.style.width = width + 'px';
+  canvas.style.height = height + 'px';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   hexes.length = 0;
   flows.length = 0;
+  clickFlows.length = 0;
   generateGrid();
 
   // scale number of flows by viewport area to maintain consistent density
   const area = window.innerWidth * window.innerHeight;
-  const targetLines = Math.max(800, Math.floor(area * BASE_DENSITY));
+  const targetLines = Math.max(3000, Math.floor(area * BASE_DENSITY)); // reduced base count
 
   for (let i = 0; i < targetLines; i++) {
     flows.push({
@@ -44,12 +54,67 @@ function resizeCanvas() {
       edge: Math.floor(Math.random() * 6),
       t: Math.random(),
       speed: BASE_SPEED * (0.6 + Math.random() * 1.4),
-      colorIndex: i % COLORS.length
+      colorIndex: i % COLORS.length,
+      isClickFlow: false,
+      createdAt: Date.now()
     });
   }
 }
 
 window.addEventListener("resize", resizeCanvas);
+window.addEventListener("scroll", () => {
+  // Recalculate canvas height on scroll in case content changes
+  const newHeight = Math.max(window.innerHeight, document.documentElement.scrollHeight);
+  if (parseInt(canvas.style.height) !== newHeight) {
+    resizeCanvas();
+  }
+});
+
+// ResizeObserver to handle dynamic content changes
+const resizeObserver = new ResizeObserver(() => {
+  resizeCanvas();
+});
+resizeObserver.observe(document.body);
+
+// Mouse click burst feature
+canvas.addEventListener('click', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  
+  // Create burst of new flows at click position
+  const burstCount = 12 + Math.floor(Math.random() * 8);
+  const clickTime = Date.now();
+  
+  for (let i = 0; i < burstCount; i++) {
+    // Find nearest hex to click position
+    let minDist = Infinity;
+    let nearestHex = 0;
+    
+    for (let j = 0; j < hexes.length; j++) {
+      const hex = hexes[j];
+      const centerX = hex.reduce((sum, v) => sum + v.x, 0) / 6;
+      const centerY = hex.reduce((sum, v) => sum + v.y, 0) / 6;
+      const dist = Math.sqrt((centerX - x) ** 2 + (centerY - y) ** 2);
+      
+      if (dist < minDist) {
+        minDist = dist;
+        nearestHex = j;
+      }
+    }
+    
+    clickFlows.push({
+      hex: nearestHex,
+      edge: Math.floor(Math.random() * 6),
+      t: Math.random(),
+      speed: BASE_SPEED * (2.0 + Math.random() * 2.0), // faster for click flows
+      colorIndex: Math.floor(Math.random() * COLORS.length),
+      isClickFlow: true,
+      createdAt: clickTime,
+      burstIntensity: 1.0
+    });
+  }
+});
 
 function hexVertices(cx, cy, r) {
   return Array.from({ length: 6 }, (_, i) => {
@@ -78,28 +143,48 @@ function animate(now) {
   const dt = Math.min(0.04, (now - lastTime) / 1000);
   lastTime = now;
 
-  // softer trail fade
-  ctx.fillStyle = 'rgba(4,10,20,0.22)';
+  // FPS monitoring
+  frameCount++;
+  if (now - lastFpsUpdate > 1000) {
+    fps = frameCount;
+    frameCount = 0;
+    lastFpsUpdate = now;
+  }
+
+  // Optimized trail fade with less opacity change for performance
+  ctx.fillStyle = 'rgba(4,10,20,0.15)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   shimmer += dt * 1.8;
 
-  // pulse logic: infrequent shock that speeds flows briefly
+  // Enhanced shock pulse logic - more frequent and dramatic
   pulseTimer += dt;
-  if (pulseTimer > 3.5 + Math.random() * 2.5) {
+  if (pulseTimer > 2.0 + Math.random() * 1.5) {
     pulseTimer = 0;
     pulseActive = true;
   }
-  // pulse lasts short duration
   if (pulseActive) {
-    if (pulseTimer > 0.45) pulseActive = false;
+    if (pulseTimer > 0.3) pulseActive = false;
   }
 
-  // batch draws by color to reduce state changes
+  // Remove old click flows (older than 15 seconds)
+  const currentTime = Date.now();
+  for (let i = clickFlows.length - 1; i >= 0; i--) {
+    if (currentTime - clickFlows[i].createdAt > 15000) {
+      clickFlows.splice(i, 1);
+    }
+  }
+
+  // Combine all flows for batch processing
+  const allFlows = [...flows, ...clickFlows];
+  
+  // Batch draws by color to reduce state changes
   ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   const flowsByColor = {};
-  for (let i = 0; i < flows.length; i++) {
-    const f = flows[i];
+  
+  for (let i = 0; i < allFlows.length; i++) {
+    const f = allFlows[i];
     (flowsByColor[f.colorIndex] = flowsByColor[f.colorIndex] || []).push(f);
   }
 
@@ -108,19 +193,22 @@ function animate(now) {
   for (const colorIndexStr in flowsByColor) {
     const colorIndex = Number(colorIndexStr);
     const col = COLORS[colorIndex];
-  ctx.strokeStyle = col.stroke;
-  ctx.shadowColor = col.glow;
-  // reduce blur for dimmer glow
-  ctx.shadowBlur = col.blur * 0.75;
-  ctx.lineWidth = 1.2;
+    ctx.strokeStyle = col.stroke;
+    ctx.shadowColor = col.glow;
+    ctx.shadowBlur = col.blur * 0.75;
+    ctx.lineWidth = allFlows[0].isClickFlow ? 1.8 : 1.2;
 
     const list = flowsByColor[colorIndex];
     ctx.beginPath();
+    
     for (let i = 0; i < list.length; i++) {
       const f = list[i];
-  // apply pulse multiplier to create shock movement
-  const pulseMul = pulseActive ? (1.8 + Math.random() * 0.8) : 1.0;
-  f.t += f.speed * dt * pulseMul;
+      
+      // Enhanced shock multiplier for dramatic movement
+      const pulseMul = pulseActive ? (2.5 + Math.random() * 1.5) : 1.0;
+      const clickMul = f.isClickFlow ? (1.5 + f.burstIntensity * 0.5) : 1.0;
+      
+      f.t += f.speed * dt * pulseMul * clickMul;
       if (f.t > 1) f.t -= 1;
 
       const h = hexes[f.hex];
@@ -130,12 +218,21 @@ function animate(now) {
       const x = a.x + (b.x - a.x) * eased;
       const y = a.y + (b.y - a.y) * eased;
 
-  // draw shorter segments so pulses look like fast strokes
-  const segmentLength = 0.34 + (pulseActive ? 0.18 : 0);
-  const sx = a.x + (b.x - a.x) * Math.max(0, f.t - segmentLength);
-  const sy = a.y + (b.y - a.y) * Math.max(0, f.t - segmentLength);
-  ctx.moveTo(sx, sy);
-  ctx.lineTo(x, y);
+      // Dynamic segment length based on flow type
+      const segmentLength = f.isClickFlow ? 
+        (0.2 + (pulseActive ? 0.15 : 0)) : 
+        (0.34 + (pulseActive ? 0.18 : 0));
+      
+      const sx = a.x + (b.x - a.x) * Math.max(0, f.t - segmentLength);
+      const sy = a.y + (b.y - a.y) * Math.max(0, f.t - segmentLength);
+      
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(x, y);
+      
+      // Decay burst intensity for click flows
+      if (f.isClickFlow && f.burstIntensity > 0.1) {
+        f.burstIntensity *= 0.98;
+      }
     }
     ctx.stroke();
   }
