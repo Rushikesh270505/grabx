@@ -554,7 +554,7 @@ html, body {
   z-index: 0; /* bring canvas to front but behind content */
   pointer-events: none;
   display: block;
-  opacity: 0.2; /* reduced for better content visibility */
+  opacity: 0.4; /* increased for better visibility */
   /* Performance optimizations */
   will-change: transform;
   transform: translateZ(0);

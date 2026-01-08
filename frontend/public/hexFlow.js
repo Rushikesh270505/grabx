@@ -5,12 +5,12 @@ const ctx = canvas.getContext("2d", { alpha: false }); // performance optimizati
 
 const HEX_SIZE = 25;
 const BASE_SPEED = 0.45; // units per second
-const BASE_DENSITY = 0.0007; // doubled from 0.00035 for more lines
+const BASE_DENSITY = 0.0014; // increased for more visible lines
 
 const COLORS = [
-  { stroke: "rgba(255,255,255,0.85)", glow: "rgba(255,255,255,0.20)", blur: 12 },
-  { stroke: "rgba(0,180,255,0.85)", glow: "rgba(0,150,255,0.15)", blur: 16 },
-  { stroke: "rgba(0,90,200,0.80)", glow: "rgba(0,100,255,0.12)", blur: 18 }
+  { stroke: "rgba(255,255,255,0.95)", glow: "rgba(255,255,255,0.35)", blur: 18 },
+  { stroke: "rgba(0,180,255,0.95)", glow: "rgba(0,150,255,0.28)", blur: 22 },
+  { stroke: "rgba(0,90,200,0.90)", glow: "rgba(0,100,255,0.25)", blur: 25 }
 ];
 
 const hexes = [];
@@ -55,7 +55,7 @@ function resizeCanvas() {
 
   // scale number of flows by viewport area to maintain consistent density
   const area = window.innerWidth * window.innerHeight;
-  const targetLines = Math.max(3000, Math.floor(area * BASE_DENSITY)); // reduced base count
+  const targetLines = Math.max(12000, Math.floor(area * BASE_DENSITY)); // increased for more lines
 
   for (let i = 0; i < targetLines; i++) {
     flows.push({
@@ -241,7 +241,7 @@ function animate(now) {
     ctx.strokeStyle = col.stroke;
     ctx.shadowColor = col.glow;
     ctx.shadowBlur = col.blur * 0.75;
-    ctx.lineWidth = allFlows[0].isClickFlow ? 1.8 : 1.2;
+    ctx.lineWidth = allFlows[0].isClickFlow ? 2.5 : 1.8;
 
     const list = flowsByColor[colorIndex];
     ctx.beginPath();
