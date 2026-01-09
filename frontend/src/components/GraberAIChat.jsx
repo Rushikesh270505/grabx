@@ -15,6 +15,7 @@ const GraberAIChat = ({ onCodeGenerated, onCodeModified }) => {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [currentCode, setCurrentCode] = useState('');
+  const [agentMode, setAgentMode] = useState(false); // Agent Mode toggle
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -249,7 +250,22 @@ if len(candles) >= 26:
 
     setMessages(prev => [...prev, assistantMessage]);
     
-    if (generatedCode && onCodeGenerated) {
+    // Agent Mode: Automatically modify code in editor
+    if (agentMode && generatedCode) {
+      if (onCodeModified) {
+        onCodeModified(generatedCode);
+      }
+      // Add agent mode confirmation message
+      const agentMessage = {
+        id: Date.now() + 1,
+        type: 'assistant',
+        content: `🤖 **Agent Mode Activated**\n\nI've automatically updated the code in your editor with the generated strategy. The changes have been applied directly to your trading bot.\n\n**Strategy Type:** ${userInput.includes('rsi') ? 'RSI' : userInput.includes('ema') ? 'EMA Crossover' : userInput.includes('macd') ? 'MACD' : 'Custom'}\n**Status:** ✅ Applied\n\nYou can now run the updated strategy or ask me to make further modifications.`,
+        timestamp: new Date(),
+        confidence: confidence,
+        confidenceColor: confidenceColor
+      };
+      setMessages(prev => [...prev, agentMessage]);
+    } else if (generatedCode && onCodeGenerated) {
       onCodeGenerated(generatedCode);
     }
     
@@ -397,6 +413,24 @@ if len(candles) >= 26:
         >
           {isTyping ? 'Processing...' : 'Send'}
         </button>
+      </div>
+
+      {/* Agent Mode Toggle */}
+      <div className="agent-mode-toggle">
+        <div className="toggle-label">
+          <span>🤖 Agent Mode</span>
+          <span className="toggle-description">
+            {agentMode ? 'Auto-apply code changes to editor' : 'Manual code insertion'}
+          </span>
+        </div>
+        <label className="toggle-switch">
+          <input
+            type="checkbox"
+            checked={agentMode}
+            onChange={(e) => setAgentMode(e.target.checked)}
+          />
+          <span className="slider"></span>
+        </label>
       </div>
 
       <div className="chat-footer">
