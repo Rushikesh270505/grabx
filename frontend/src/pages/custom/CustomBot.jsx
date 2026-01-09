@@ -95,24 +95,24 @@ export default function CustomBot() {
 
   return (
     <div style={{ padding: 24, color: '#fff' }}>
-      <div style={{ marginBottom: 16 }}>
-        <h1 style={{ marginTop: 0, marginBottom: 8 }}>Custom Python Bot</h1>
-        <p style={{ color: '#9aa1aa', marginTop: 0 }}>Write simple trading rules and see live signals on the chart.</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div>
+          <h1 style={{ margin: 0, marginBottom: 8 }}>Custom Python Bot</h1>
+          <p style={{ color: '#9aa1aa', margin: 0 }}>Write simple trading rules and see live signals on the chart.</p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ color: '#cfd3d8', fontSize: 14 }}>Trading Pair:</span>
+          <CoinSelector selectedPair={symbol} onPairChange={setSymbol} disabled={isRunning} />
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 20 }}>
         {/* Left Column: Chart & Dashboard */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* Chart with Coin Selector */}
+          {/* Chart without Coin Selector */}
           <div className="glass-panel" style={{ padding: 20, height: 400 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ margin: 0, color: '#5da9ff' }}>📈 Live Chart</h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ color: '#9aa1aa', fontSize: 14 }}>Pair:</span>
-                <CoinSelector selectedPair={symbol} onPairChange={setSymbol} disabled={isRunning} />
-              </div>
-            </div>
-            <div style={{ height: 'calc(100% - 50px)' }}>
+            <h3 style={{ margin: 0, marginBottom: 16, color: '#5da9ff' }}>📈 Live Chart</h3>
+            <div style={{ height: 'calc(100% - 40px)' }}>
               <PairChart pair={symbol} liveSymbol={symbol.replace('/','').toLowerCase()} />
             </div>
           </div>
