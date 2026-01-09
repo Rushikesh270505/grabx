@@ -147,13 +147,61 @@
   align-items: center;
   padding: 8px 12px;
   background: rgba(93, 169, 255, 0.1);
-  border-bottom: 1px solid rgba(93, 169, 255, 0.3);
-}
-
-.code-header span {
+  border-bottom: 1px solid rgba(93, 169, 255, 0.2);
+  border-radius: 8px 8px 0 0;
+  font-weight: 600;
   color: #5da9ff;
   font-size: 12px;
+}
+
+.code-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.copy-btn, .download-btn, .insert-btn {
+  padding: 4px 8px;
+  background: rgba(93, 169, 255, 0.2);
+  border: 1px solid rgba(93, 169, 255, 0.3);
+  border-radius: 4px;
+  color: #5da9ff;
+  font-size: 10px;
   font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.copy-btn:hover, .download-btn:hover, .insert-btn:hover {
+  background: rgba(93, 169, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.copy-btn:active, .download-btn:active, .insert-btn:active {
+  transform: translateY(0);
+}
+
+.copy-btn {
+  background: rgba(76, 175, 80, 0.2);
+  border-color: rgba(76, 175, 80, 0.3);
+  color: #4caf50;
+}
+
+.copy-btn:hover {
+  background: rgba(76, 175, 80, 0.3);
+}
+
+.download-btn {
+  background: rgba(33, 150, 243, 0.2);
+  border-color: rgba(33, 150, 243, 0.3);
+  color: #2196f3;
+}
+
+.download-btn:hover {
+  background: rgba(33, 150, 243, 0.3);
 }
 
 .insert-btn {
