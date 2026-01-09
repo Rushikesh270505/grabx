@@ -28,7 +28,25 @@ const GraberAIChat = ({ onCodeGenerated, onCodeModified }) => {
   }, [messages]);
 
   const generateStrategy = async (requirements) => {
-    // Enhanced Graber AI strategy generation with advanced LLM training
+    // Enhanced Graber AI with LeetCode and CodeChef problem-solving capabilities
+    const lowerInput = requirements.toLowerCase();
+    
+    // Check if it's a coding problem request
+    if (lowerInput.includes('leetcode') || lowerInput.includes('codechef') || 
+        lowerInput.includes('solve') || lowerInput.includes('algorithm') ||
+        lowerInput.includes('data structure') || lowerInput.includes('coding problem') ||
+        lowerInput.includes('array') || lowerInput.includes('string') || 
+        lowerInput.includes('tree') || lowerInput.includes('graph') ||
+        lowerInput.includes('dynamic programming') || lowerInput.includes('dp') ||
+        lowerInput.includes('binary search') || lowerInput.includes('sorting') ||
+        lowerInput.includes('linked list') || lowerInput.includes('stack') ||
+        lowerInput.includes('queue') || lowerInput.includes('hash map') ||
+        lowerInput.includes('recursion') || lowerInput.includes('backtracking')) {
+      
+      return await generateCodingSolution(requirements);
+    }
+    
+    // Original trading strategy generation
     const strategies = {
       'rsi': `# Advanced RSI Mean Reversion Strategy
 # Enhanced with dynamic parameters and risk management
@@ -259,7 +277,7 @@ if (current_macd > current_signal and macd_slope > macd_threshold and
 elif (current_macd < current_signal and macd_slope < -macd_threshold and 
           current_histogram < 0 and histogram_trend < 0 and position is not None):
     
-    signals.append({
+        signals.append({
             'side': 'sell',
             'price': current_price,
             'quantity': position.get('quantity', risk_per_trade / (0.025 * 2)),
@@ -407,7 +425,6 @@ elif position is not None and rsi > 65:
     };
     
     // Enhanced strategy selection with better keyword matching
-    const lowerInput = requirements.toLowerCase();
     let selectedStrategy = 'default';
     
     if (lowerInput.includes('rsi') || lowerInput.includes('relative strength') || lowerInput.includes('oversold') || lowerInput.includes('overbought')) {
@@ -423,6 +440,727 @@ elif position is not None and rsi > 65:
     }
     
     return strategies[selectedStrategy] || strategies['default'];
+  };
+
+  const generateCodingSolution = async (requirements) => {
+    // Advanced coding problem solver for LeetCode and CodeChef
+    const lowerInput = requirements.toLowerCase();
+    
+    // Array problems
+    if (lowerInput.includes('array') && lowerInput.includes('two sum')) {
+      return `# Two Sum Problem - LeetCode #1
+# Time Complexity: O(n), Space Complexity: O(n)
+
+def two_sum(nums, target):
+    """
+    Given an array of integers nums and an integer target,
+    return indices of the two numbers such that they add up to target.
+    """
+    # Create a hash map to store value -> index mapping
+    num_map = {}
+    
+    for i, num in enumerate(nums):
+        complement = target - num
+        
+        # Check if complement exists in the map
+        if complement in num_map:
+            return [num_map[complement], i]
+        
+        # Add current number to the map
+        num_map[num] = i
+    
+    return []  # No solution found
+
+# Example usage
+if __name__ == "__main__":
+    nums = [2, 7, 11, 15]
+    target = 9
+    result = two_sum(nums, target)
+    print(f"Indices: {result}")  # Output: [0, 1]`;
+    }
+    
+    if (lowerInput.includes('array') && lowerInput.includes('reverse')) {
+      return `# Reverse Array Problem
+# Time Complexity: O(n), Space Complexity: O(1)
+
+def reverse_array(nums):
+    """
+    Reverse an array in-place
+    """
+    left, right = 0, len(nums) - 1
+    
+    while left < right:
+        # Swap elements
+        nums[left], nums[right] = nums[right], nums[left]
+        left += 1
+        right -= 1
+    
+    return nums
+
+# Example usage
+if __name__ == "__main__":
+    arr = [1, 2, 3, 4, 5]
+    result = reverse_array(arr)
+    print(f"Reversed array: {result}")  # Output: [5, 4, 3, 2, 1]`;
+    }
+    
+    // String problems
+    if (lowerInput.includes('string') && lowerInput.includes('palindrome')) {
+      return `# Palindrome String Problem
+# Time Complexity: O(n), Space Complexity: O(1)
+
+def is_palindrome(s):
+    """
+    Check if a string is a palindrome
+    """
+    left, right = 0, len(s) - 1
+    
+    while left < right:
+        # Skip non-alphanumeric characters
+        while left < right and not s[left].isalnum():
+            left += 1
+        while left < right and not s[right].isalnum():
+            right -= 1
+        
+        if s[left].lower() != s[right].lower():
+            return False
+        
+        left += 1
+        right -= 1
+    
+    return True
+
+# Example usage
+if __name__ == "__main__":
+    test_strings = ["racecar", "hello", "A man, a plan, a canal: Panama"]
+    for s in test_strings:
+        print(f"'{s}' is palindrome: {is_palindrome(s)}")`;
+    }
+    
+    // Sorting problems
+    if (lowerInput.includes('sorting') || lowerInput.includes('sort')) {
+      return `# Advanced Sorting Algorithms
+# Multiple sorting implementations with time complexity analysis
+
+def bubble_sort(arr):
+    """Bubble Sort - O(n²) time, O(1) space"""
+    n = len(arr)
+    for i in range(n):
+        swapped = False
+        for j in range(0, n - i - 1):
+            if arr[j] > arr[j + 1]:
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+                swapped = True
+        if not swapped:
+            break
+    return arr
+
+def quick_sort(arr):
+    """Quick Sort - O(n log n) average, O(n²) worst case"""
+    if len(arr) <= 1:
+        return arr
+    
+    pivot = arr[len(arr) // 2]
+    left = [x for x in arr if x < pivot]
+    middle = [x for x in arr if x == pivot]
+    right = [x for x in arr if x > pivot]
+    
+    return quick_sort(left) + middle + quick_sort(right)
+
+def merge_sort(arr):
+    """Merge Sort - O(n log n) time, O(n) space"""
+    if len(arr) <= 1:
+        return arr
+    
+    mid = len(arr) // 2
+    left = merge_sort(arr[:mid])
+    right = merge_sort(arr[mid:])
+    
+    return merge(left, right)
+
+def merge(left, right):
+    """Helper function for merge sort"""
+    result = []
+    i = j = 0
+    
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:
+            result.append(left[i])
+            i += 1
+        else:
+            result.append(right[j])
+            j += 1
+    
+    result.extend(left[i:])
+    result.extend(right[j:])
+    return result
+
+# Example usage
+if __name__ == "__main__":
+    arr = [64, 34, 25, 12, 22, 11, 90]
+    print(f"Original: {arr}")
+    print(f"Bubble Sort: {bubble_sort(arr.copy())}")
+    print(f"Quick Sort: {quick_sort(arr.copy())}")
+    print(f"Merge Sort: {merge_sort(arr.copy())}")`;
+    }
+    
+    // Binary Search
+    if (lowerInput.includes('binary search')) {
+      return `# Binary Search Algorithm
+# Time Complexity: O(log n), Space Complexity: O(1)
+
+def binary_search(arr, target):
+    """
+    Search for target in sorted array using binary search
+    """
+    left, right = 0, len(arr) - 1
+    
+    while left <= right:
+        mid = (left + right) // 2
+        
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    
+    return -1  # Target not found
+
+def binary_search_recursive(arr, target, left=0, right=None):
+    """
+    Recursive binary search implementation
+    """
+    if right is None:
+        right = len(arr) - 1
+    
+    if left > right:
+        return -1
+    
+    mid = (left + right) // 2
+    
+    if arr[mid] == target:
+        return mid
+    elif arr[mid] < target:
+        return binary_search_recursive(arr, target, mid + 1, right)
+    else:
+        return binary_search_recursive(arr, target, left, mid - 1)
+
+# Example usage
+if __name__ == "__main__":
+    sorted_arr = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
+    targets = [7, 8, 15, 20]
+    
+    for target in targets:
+        index = binary_search(sorted_arr, target)
+        print(f"Target {target} found at index: {index}")`;
+    }
+    
+    // Linked List
+    if (lowerInput.includes('linked list')) {
+      return `# Linked List Operations
+# Time Complexity: O(n) for most operations
+
+class ListNode:
+    """Node class for linked list"""
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
+
+class LinkedList:
+    """Linked List implementation"""
+    def __init__(self):
+        self.head = None
+    
+    def append(self, val):
+        """Add node to end of list"""
+        new_node = ListNode(val)
+        if not self.head:
+            self.head = new_node
+            return
+        
+        current = self.head
+        while current.next:
+            current = current.next
+        current.next = new_node
+    
+    def reverse(self):
+        """Reverse linked list in-place"""
+        prev = None
+        current = self.head
+        
+        while current:
+            next_node = current.next
+            current.next = prev
+            prev = current
+            current = next_node
+        
+        self.head = prev
+    
+    def print_list(self):
+        """Print linked list"""
+        current = self.head
+        result = []
+        while current:
+            result.append(str(current.val))
+            current = current.next
+        print(" -> ".join(result))
+
+# Example usage
+if __name__ == "__main__":
+    ll = LinkedList()
+    for i in range(1, 6):
+        ll.append(i)
+    
+    print("Original list:")
+    ll.print_list()
+    
+    ll.reverse()
+    print("Reversed list:")
+    ll.print_list()`;
+    }
+    
+    // Stack
+    if (lowerInput.includes('stack')) {
+      return `# Stack Implementation and Problems
+# Time Complexity: O(1) for push/pop/peek
+
+class Stack:
+    """Stack implementation using list"""
+    def __init__(self):
+        self.items = []
+    
+    def push(self, item):
+        """Add item to top of stack"""
+        self.items.append(item)
+    
+    def pop(self):
+        """Remove and return top item"""
+        if not self.is_empty():
+            return self.items.pop()
+        return None
+    
+    def peek(self):
+        """Return top item without removing"""
+        if not self.is_empty():
+            return self.items[-1]
+        return None
+    
+    def is_empty(self):
+        """Check if stack is empty"""
+        return len(self.items) == 0
+    
+    def size(self):
+        """Return stack size"""
+        return len(self.items)
+
+def is_valid_parentheses(s):
+    """
+    Check if parentheses are balanced - LeetCode #20
+    Time Complexity: O(n), Space Complexity: O(n)
+    """
+    stack = []
+    mapping = {')': '(', '}': '{', ']': '['}
+    
+    for char in s:
+        if char in mapping.values():
+            stack.append(char)
+        elif char in mapping:
+            if not stack or stack.pop() != mapping[char]:
+                return False
+        else:
+            continue  # Ignore other characters
+    
+    return not stack.is_empty() if hasattr(stack, 'is_empty') else not stack
+
+# Example usage
+if __name__ == "__main__":
+    # Stack operations
+    stack = Stack()
+    for i in range(1, 6):
+        stack.push(i)
+    
+    print(f"Stack size: {stack.size()}")
+    print(f"Top element: {stack.peek()}")
+    
+    while not stack.is_empty():
+        print(f"Popped: {stack.pop()}")
+    
+    # Parentheses validation
+    test_cases = ["()", "()[]{}", "(]", "([{}])", ""]
+    for case in test_cases:
+        print(f"'{case}' is valid: {is_valid_parentheses(case)}")`;
+    }
+    
+    // Dynamic Programming
+    if (lowerInput.includes('dynamic programming') || lowerInput.includes('dp')) {
+      return `# Dynamic Programming Examples
+# Time Complexity varies by problem
+
+def fibonacci_dp(n):
+    """
+    Fibonacci using DP - O(n) time, O(1) space
+    """
+    if n <= 1:
+        return n
+    
+    a, b = 0, 1
+    for _ in range(2, n + 1):
+        a, b = b, a + b
+    
+    return b
+
+def longest_common_subsequence(text1, text2):
+    """
+    LCS Problem - O(m*n) time, O(m*n) space
+    """
+    m, n = len(text1), len(text2)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+    
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if text1[i-1] == text2[j-1]:
+                dp[i][j] = dp[i-1][j-1] + 1
+            else:
+                dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+    
+    return dp[m][n]
+
+def coin_change(coins, amount):
+    """
+    Coin Change Problem - O(n*m) time, O(m) space
+    """
+    dp = [float('inf')] * (amount + 1)
+    dp[0] = 0
+    
+    for coin in coins:
+        for i in range(coin, amount + 1):
+            dp[i] = min(dp[i], dp[i - coin] + 1)
+    
+    return dp[amount] if dp[amount] != float('inf') else -1
+
+# Example usage
+if __name__ == "__main__":
+    # Fibonacci
+    print(f"Fibonacci(10): {fibonacci_dp(10)}")
+    
+    # LCS
+    text1, text2 = "ABCBDAB", "BDCABA"
+    print(f"LCS length: {longest_common_subsequence(text1, text2)}")
+    
+    # Coin Change
+    coins = [1, 3, 4]
+    amount = 6
+    print(f"Coin change minimum coins: {coin_change(coins, amount)}")`;
+    }
+    
+    // Tree problems
+    if (lowerInput.includes('tree') || lowerInput.includes('binary tree')) {
+      return `# Binary Tree Operations and Problems
+# Time Complexity: O(n) for most operations
+
+class TreeNode:
+    """Binary Tree Node"""
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+def inorder_traversal(root):
+    """
+    Inorder traversal - Left, Root, Right
+    Time Complexity: O(n), Space Complexity: O(h) where h is height
+    """
+    result = []
+    
+    def traverse(node):
+        if node:
+            traverse(node.left)
+            result.append(node.val)
+            traverse(node.right)
+    
+    traverse(root)
+    return result
+
+def max_depth(root):
+    """
+    Maximum depth of binary tree - LeetCode #104
+    """
+    if not root:
+        return 0
+    
+    left_depth = max_depth(root.left)
+    right_depth = max_depth(root.right)
+    
+    return max(left_depth, right_depth) + 1
+
+def is_same_tree(p, q):
+    """
+    Check if two trees are identical - LeetCode #100
+    """
+    if not p and not q:
+        return True
+    if not p or not q:
+        return False
+    if p.val != q.val:
+        return False
+    
+    return is_same_tree(p.left, q.left) and is_same_tree(p.right, q.right)
+
+def level_order_traversal(root):
+    """
+    Level order traversal (BFS) - LeetCode #102
+    Time Complexity: O(n), Space Complexity: O(n)
+    """
+    if not root:
+        return []
+    
+    from collections import deque
+    queue = deque([root])
+    result = []
+    
+    while queue:
+        level_size = len(queue)
+        current_level = []
+        
+        for _ in range(level_size):
+            node = queue.popleft()
+            current_level.append(node.val)
+            
+            if node.left:
+                queue.append(node.left)
+            if node.right:
+                queue.append(node.right)
+        
+        result.append(current_level)
+    
+    return result
+
+# Example usage
+if __name__ == "__main__":
+    # Create a sample tree
+    #       1
+    #      / \\
+    #     2   3
+    #    / \\
+    #   4   5
+    root = TreeNode(1)
+    root.left = TreeNode(2)
+    root.right = TreeNode(3)
+    root.left.left = TreeNode(4)
+    root.left.right = TreeNode(5)
+    
+    print(f"Inorder traversal: {inorder_traversal(root)}")
+    print(f"Max depth: {max_depth(root)}")
+    print(f"Level order traversal: {level_order_traversal(root)}")`;
+    }
+    
+    // Graph problems
+    if (lowerInput.includes('graph')) {
+      return `# Graph Algorithms and Problems
+# Time Complexity varies by algorithm
+
+from collections import defaultdict, deque
+
+class Graph:
+    """Graph implementation using adjacency list"""
+    def __init__(self):
+        self.graph = defaultdict(list)
+    
+    def add_edge(self, u, v):
+        """Add edge to graph"""
+        self.graph[u].append(v)
+    
+    def bfs(self, start):
+        """
+        Breadth First Search - O(V + E) time, O(V) space
+        """
+        visited = set()
+        queue = deque([start])
+        visited.add(start)
+        result = []
+        
+        while queue:
+            node = queue.popleft()
+            result.append(node)
+            
+            for neighbor in self.graph[node]:
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    queue.append(neighbor)
+        
+        return result
+    
+    def dfs(self, start, visited=None):
+        """
+        Depth First Search - O(V + E) time, O(V) space
+        """
+        if visited is None:
+            visited = set()
+        
+        visited.add(start)
+        result = [start]
+        
+        for neighbor in self.graph[start]:
+            if neighbor not in visited:
+                result.extend(self.dfs(neighbor, visited))
+        
+        return result
+
+def has_cycle(graph):
+    """
+    Detect cycle in directed graph using DFS
+    Time Complexity: O(V + E), Space Complexity: O(V)
+    """
+    visited = set()
+    recursion_stack = set()
+    
+    def dfs(node):
+        visited.add(node)
+        recursion_stack.add(node)
+        
+        for neighbor in graph.graph[node]:
+            if neighbor not in visited:
+                if dfs(neighbor):
+                    return True
+            elif neighbor in recursion_stack:
+                return True
+        
+        recursion_stack.remove(node)
+        return False
+    
+    for node in graph.graph:
+        if node not in visited:
+            if dfs(node):
+                return True
+    
+    return False
+
+def dijkstra(graph, start):
+    """
+    Dijkstra's shortest path algorithm
+    Time Complexity: O((V + E) log V), Space Complexity: O(V)
+    """
+    import heapq
+    
+    distances = {node: float('inf') for node in graph.graph}
+    distances[start] = 0
+    priority_queue = [(0, start)]
+    
+    while priority_queue:
+        current_distance, current_node = heapq.heappop(priority_queue)
+        
+        if current_distance > distances[current_node]:
+            continue
+        
+        for neighbor in graph.graph[current_node]:
+            distance = current_distance + 1  # Assuming unit weight
+            
+            if distance < distances[neighbor]:
+                distances[neighbor] = distance
+                heapq.heappush(priority_queue, (distance, neighbor))
+    
+    return distances
+
+# Example usage
+if __name__ == "__main__":
+    # Create a graph
+    g = Graph()
+    g.add_edge(0, 1)
+    g.add_edge(0, 2)
+    g.add_edge(1, 2)
+    g.add_edge(2, 0)
+    g.add_edge(2, 3)
+    g.add_edge(3, 3)
+    
+    print(f"BFS from node 2: {g.bfs(2)}")
+    print(f"DFS from node 2: {g.dfs(2)}")
+    print(f"Graph has cycle: {has_cycle(g)}")
+    
+    # Shortest path
+    distances = dijkstra(g, 0)
+    print(f"Shortest distances from node 0: {distances}")`;
+    }
+    
+    // Default coding solution
+    return `# Comprehensive Coding Problem Template
+# Ready to solve any algorithmic challenge
+
+def solve_problem():
+    """
+    Template for solving coding problems
+    Follow these steps:
+    1. Understand the problem
+    2. Identify constraints
+    3. Choose appropriate algorithm
+    4. Implement solution
+    5. Test with examples
+    """
+    
+    # Step 1: Read input
+    import sys
+    input = sys.stdin.read
+    
+    # Step 2: Parse input
+    data = input().strip().split()
+    
+    # Step 3: Process based on problem type
+    if not data:
+        return
+    
+    # Example processing logic
+    n = int(data[0])
+    arr = list(map(int, data[1:n+1])) if n > 0 else []
+    
+    # Step 4: Implement algorithm
+    result = process_algorithm(arr)
+    
+    # Step 5: Output result
+    print(result)
+
+def process_algorithm(arr):
+    """
+    Implement your specific algorithm here
+    Common patterns:
+    - Sorting: O(n log n)
+    - Hash maps: O(n) average
+    - Two pointers: O(n)
+    - Binary search: O(log n)
+    - DP: O(n²) or better
+    """
+    
+    # Example: Find maximum subarray sum (Kadane's algorithm)
+    if not arr:
+        return 0
+    
+    max_sum = current_sum = arr[0]
+    
+    for num in arr[1:]:
+        current_sum = max(num, current_sum + num)
+        max_sum = max(max_sum, current_sum)
+    
+    return max_sum
+
+# Test cases
+def test_solution():
+    """Test your solution with various cases"""
+    test_cases = [
+        ([1, -2, 3, 4, -1, 2, 1, -5, 4], 6),
+        ([-1, -2, -3, -4], -1),
+        ([1, 2, 3, 4, 5], 15),
+        ([], 0)
+    ]
+    
+    for i, (input_arr, expected) in enumerate(test_cases):
+        result = process_algorithm(input_arr)
+        print(f"Test {i+1}: {'PASS' if result == expected else 'FAIL'}")
+        print(f"Input: {input_arr}")
+        print(f"Expected: {expected}, Got: {result}")
+
+if __name__ == "__main__":
+    test_solution()
+    # Uncomment the next line for actual submission
+    # solve_problem()`;
   };
 
   const analyzeCode = async (code) => {
@@ -636,6 +1374,70 @@ elif position is not None and rsi > 65:
       response = `🚀 **${strategyType} Strategy Generated Successfully**\n\n**📊 Strategy Overview:**\n• **Type:** ${strategyType}\n• **Description:** ${strategyDescription}\n• **Risk Level:** ${riskLevel}\n• **Timeframe:** ${timeframe}\n\n**🛡️ Advanced Features Included:**\n• Dynamic position sizing with risk management\n• Adaptive thresholds based on market volatility\n• Multiple confirmation signals\n• Professional stop-loss and take-profit levels\n• Detailed trade reasoning for analysis\n\n**⚡ Performance Optimizations:**\n• Efficient indicator calculations\n• Proper data validation\n• Error handling and edge cases\n• Optimized for real-time execution\n\n**🎯 Ready to Deploy:**\nThe strategy has been validated and optimized for live trading. All indicators are properly calculated with professional-grade accuracy.\n\n${agentMode ? '🤖 **Agent Mode:** Strategy automatically applied to editor!' : '📝 **Next Steps:** Use "Insert to Editor" or enable Agent Mode for automatic deployment.'}\n\n💡 **Pro Tip:** Monitor the strategy performance and adjust parameters based on market conditions for optimal results.`;
       
       confidence = 0.92;
+      confidenceColor = 'GREEN';
+    }
+    // Coding problem solving mode
+    else if (lowerInput.includes('leetcode') || lowerInput.includes('codechef') || 
+             lowerInput.includes('solve') || lowerInput.includes('algorithm') ||
+             lowerInput.includes('data structure') || lowerInput.includes('coding problem') ||
+             lowerInput.includes('array') || lowerInput.includes('string') || 
+             lowerInput.includes('tree') || lowerInput.includes('graph') ||
+             lowerInput.includes('dynamic programming') || lowerInput.includes('dp') ||
+             lowerInput.includes('binary search') || lowerInput.includes('sorting') ||
+             lowerInput.includes('linked list') || lowerInput.includes('stack') ||
+             lowerInput.includes('queue') || lowerInput.includes('hash map') ||
+             lowerInput.includes('recursion') || lowerInput.includes('backtracking')) {
+      
+      // Coding problem solving mode
+      generatedCode = await generateStrategy(userInput);
+      
+      // Determine problem type for response
+      let problemType = 'Algorithm';
+      let problemDescription = '';
+      let complexity = 'Varies';
+      let platform = 'LeetCode/CodeChef';
+      
+      if (lowerInput.includes('array')) {
+        problemType = 'Array Manipulation';
+        problemDescription = 'Efficient array operations and algorithms';
+        complexity = 'O(n) to O(n log n)';
+      } else if (lowerInput.includes('string')) {
+        problemType = 'String Processing';
+        problemDescription = 'String manipulation and pattern matching';
+        complexity = 'O(n) to O(n²)';
+      } else if (lowerInput.includes('tree')) {
+        problemType = 'Tree Algorithms';
+        problemDescription = 'Binary tree operations and traversals';
+        complexity = 'O(n) to O(n log n)';
+      } else if (lowerInput.includes('graph')) {
+        problemType = 'Graph Algorithms';
+        problemDescription = 'Graph traversal and shortest path algorithms';
+        complexity = 'O(V + E) to O((V + E) log V)';
+      } else if (lowerInput.includes('dynamic programming') || lowerInput.includes('dp')) {
+        problemType = 'Dynamic Programming';
+        problemDescription = 'Optimization problems with overlapping subproblems';
+        complexity = 'O(n²) to O(n³)';
+      } else if (lowerInput.includes('sorting')) {
+        problemType = 'Sorting Algorithms';
+        problemDescription = 'Various sorting techniques and implementations';
+        complexity = 'O(n log n) average';
+      } else if (lowerInput.includes('binary search')) {
+        problemType = 'Binary Search';
+        problemDescription = 'Efficient search in sorted arrays';
+        complexity = 'O(log n)';
+      } else if (lowerInput.includes('linked list')) {
+        problemType = 'Linked List Operations';
+        problemDescription = 'Singly and doubly linked list algorithms';
+        complexity = 'O(n)';
+      } else if (lowerInput.includes('stack')) {
+        problemType = 'Stack Applications';
+        problemDescription = 'LIFO data structure and problem-solving';
+        complexity = 'O(n)';
+      }
+      
+      response = `🧠 **${problemType} Solution Generated**\n\n**📋 Problem Analysis:**\n• **Type:** ${problemType}\n• **Description:** ${problemDescription}\n• **Platform:** ${platform}\n• **Time Complexity:** ${complexity}\n\n**💻 Solution Features:**\n• **Optimized algorithms** with best practices\n• **Time complexity analysis** included\n• **Space complexity** optimization\n• **Edge case handling** and error prevention\n• **Comprehensive comments** for understanding\n• **Test cases** for validation\n\n**🎯 Key Concepts Covered:**\n• Algorithm design patterns\n• Data structure selection\n• Efficiency optimization\n• Problem-solving methodology\n• Code organization and structure\n\n**📚 Learning Outcomes:**\n• Understanding algorithmic thinking\n• Mastering data structures\n• Implementing efficient solutions\n• Analyzing time/space complexity\n• Writing clean, maintainable code\n\n${agentMode ? '🤖 **Agent Mode:** Solution automatically applied to editor!' : '📝 **Next Steps:** Use "Insert to Editor" or enable Agent Mode for automatic deployment.'}\n\n💡 **Pro Tip:** Study the solution carefully to understand the underlying patterns and apply them to similar problems!`;
+      
+      confidence = 0.95;
       confidenceColor = 'GREEN';
     }
     // Default response for unrecognized input
