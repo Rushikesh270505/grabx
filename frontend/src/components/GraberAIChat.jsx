@@ -415,24 +415,6 @@ if len(candles) >= 26:
         </button>
       </div>
 
-      {/* Agent Mode Toggle */}
-      <div className="agent-mode-toggle">
-        <div className="toggle-label">
-          <span>🤖 Agent Mode</span>
-          <span className="toggle-description">
-            {agentMode ? 'Auto-apply code changes to editor' : 'Manual code insertion'}
-          </span>
-        </div>
-        <label className="toggle-switch">
-          <input
-            type="checkbox"
-            checked={agentMode}
-            onChange={(e) => setAgentMode(e.target.checked)}
-          />
-          <span className="slider"></span>
-        </label>
-      </div>
-
       <div className="chat-footer">
         <div className="quick-actions">
           <button 
@@ -453,6 +435,21 @@ if len(candles) >= 26:
           >
             MACD Strategy
           </button>
+        </div>
+        
+        {/* Agent Mode Toggle - Bottom Right */}
+        <div className="agent-mode-toggle-bottom">
+          <div className="toggle-label-compact">
+            <span>🤖 Agent</span>
+            <label className="toggle-switch-compact">
+              <input
+                type="checkbox"
+                checked={agentMode}
+                onChange={(e) => setAgentMode(e.target.checked)}
+              />
+              <span className="slider-compact"></span>
+            </label>
+          </div>
         </div>
       </div>
     </div>

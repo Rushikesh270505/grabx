@@ -344,6 +344,75 @@
   transform: translateX(26px);
 }
 
+/* Compact Bottom Right Toggle */
+.agent-mode-toggle-bottom {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 8px;
+  padding: 6px 8px;
+  border: 1px solid rgba(93, 169, 255, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.toggle-label-compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-label-compact span {
+  font-weight: 600;
+  color: #5da9ff;
+  font-size: 12px;
+}
+
+.toggle-switch-compact {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 18px;
+}
+
+.toggle-switch-compact input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider-compact {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.2);
+  transition: 0.3s;
+  border-radius: 18px;
+}
+
+.slider-compact:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+  background: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.toggle-switch-compact input:checked + .slider-compact {
+  background: #5da9ff;
+}
+
+.toggle-switch-compact input:checked + .slider-compact:before {
+  transform: translateX(18px);
+}
+
 .chat-input {
   padding: 16px 20px;
   border-top: 1px solid rgba(93, 169, 255, 0.2);
@@ -400,8 +469,9 @@
 }
 
 .chat-footer {
-  padding: 12px 20px;
+  padding: 16px 20px;
   border-top: 1px solid rgba(93, 169, 255, 0.2);
+  position: relative; /* Required for absolute positioning of toggle */
   background: rgba(93, 169, 255, 0.05);
 }
 
