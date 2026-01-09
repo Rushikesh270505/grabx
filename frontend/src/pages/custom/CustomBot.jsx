@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PairChart from '../../components/PairChart';
 import CoinSelector from '../../components/CoinSelector';
+import GraberAIChat from '../../components/GraberAIChat';
 import { executePythonCode } from '../../services/pythonExecutor';
 
 // Default Python trading bot template
@@ -217,7 +218,7 @@ export default function CustomBot() {
           </div>
         </div>
 
-        {/* Right Panel: Chart & Info */}
+        {/* Right Panel: Chart, Info & AI Chat */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div className="glass-panel" style={{ padding: 20 }}>
             <h3 style={{ marginTop: 0, marginBottom: 12, color: '#5da9ff' }}>📈 Chart</h3>
@@ -249,6 +250,20 @@ export default function CustomBot() {
                 {events.length > 0 ? `\n📊 Generated ${events.length} signals` : ''}
               </pre>
             </div>
+          </div>
+
+          {/* Graber AI Chat */}
+          <div style={{ height: 400 }}>
+            <GraberAIChat 
+              onCodeGenerated={(generatedCode) => {
+                setCode(generatedCode);
+                setExecutionError(null);
+              }}
+              onCodeModified={(modifiedCode) => {
+                setCode(modifiedCode);
+                setExecutionError(null);
+              }}
+            />
           </div>
         </div>
       </div>
