@@ -125,29 +125,69 @@ export default function CustomBot() {
                 <h4 style={{ margin: 0, marginBottom: 12, color: '#5da9ff', fontSize: 16 }}>Market Overview</h4>
                 <div style={{ 
                   display: 'grid', 
-                  gridTemplateColumns: '1fr 1fr', 
-                  gap: 8,
+                  gridTemplateColumns: 'repeat(3, 1fr)', 
+                  gap: 6,
                   height: 'calc(100% - 40px)',
                   overflow: 'hidden'
                 }}>
-                  {['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'ADAUSDT', 'SOLUSDT', 'DOTUSDT'].map((pair, index) => (
-                    <div key={pair} style={{
+                  {[
+                    { pair: 'BTCUSDT', change: 5.55, price: 60377, trend: 'up' },
+                    { pair: 'ETHUSDT', change: -2.34, price: 3456, trend: 'down' },
+                    { pair: 'BNBUSDT', change: 1.23, price: 567, trend: 'up' },
+                    { pair: 'ADAUSDT', change: 3.45, price: 0.65, trend: 'up' },
+                    { pair: 'SOLUSDT', change: -1.89, price: 145, trend: 'down' },
+                    { pair: 'DOTUSDT', change: 0.67, price: 8.90, trend: 'up' },
+                    { pair: 'AVAXUSDT', change: 4.12, price: 38.50, trend: 'up' },
+                    { pair: 'MATICUSDT', change: -0.45, price: 0.92, trend: 'down' },
+                    { pair: 'LINKUSDT', change: 2.78, price: 14.30, trend: 'up' }
+                  ].map((crypto, index) => (
+                    <div key={crypto.pair} style={{
                       background: 'rgba(255,255,255,0.05)',
                       border: '1px solid rgba(93,169,255,0.2)',
                       borderRadius: 8,
-                      padding: 8,
-                      fontSize: 12,
+                      padding: 6,
+                      fontSize: 10,
                       color: '#cfd3d8',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: 4
+                      gap: 2,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
                     }}>
-                      <div style={{ fontWeight: 600, color: '#5da9ff' }}>{pair}</div>
-                      <div style={{ fontSize: 11, color: '#9aa1aa' }}>
-                        {index % 2 === 0 ? '▲' : '▼'} {(Math.random() * 10).toFixed(2)}%
+                      <div style={{ fontWeight: 600, color: '#5da9ff', fontSize: 9 }}>{crypto.pair}</div>
+                      <div style={{ 
+                        fontSize: 9, 
+                        color: crypto.trend === 'up' ? '#7ef0a2' : '#ffb3b3',
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2
+                      }}>
+                        {crypto.trend === 'up' ? '▲' : '▼'} {Math.abs(crypto.change)}%
                       </div>
-                      <div style={{ fontSize: 11, color: '#7ef0a2' }}>
-                        ${(Math.random() * 1000 + 100).toFixed(2)}
+                      <div style={{ fontSize: 9, color: '#7ef0a2', fontWeight: 600 }}>
+                        ${crypto.price.toLocaleString()}
+                      </div>
+                      {/* Mini Sparkline Graph */}
+                      <div style={{ 
+                        height: 30, 
+                        width: '100%',
+                        background: 'rgba(0,0,0,0.2)',
+                        borderRadius: 4,
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}>
+                        <svg width="100%" height="100%" style={{ position: 'absolute' }}>
+                          <polyline
+                            points={crypto.trend === 'up' 
+                              ? '0,25 5,22 10,20 15,18 20,15 25,12 30,8 35,10 40,5 45,7 50,3 55,6 60,2'
+                              : '0,5 5,8 10,10 15,12 20,15 25,18 30,22 35,20 40,25 45,23 50,27 55,24 60,28'
+                            }
+                            fill="none"
+                            stroke={crypto.trend === 'up' ? '#7ef0a2' : '#ffb3b3'}
+                            strokeWidth="1.5"
+                          />
+                        </svg>
                       </div>
                     </div>
                   ))}
