@@ -44,7 +44,9 @@ function generateSparkline(trend, points = 60) {
     const microFluctuation = Math.sin(i * 0.3) * 2; // Small fluctuations
     
     const y = baseY + trendMovement + volatility + microFluctuation;
-    sparklinePoints.push(`${i},${Math.max(2, Math.min(28, y))}`);
+    // Use full width from 0 to panel width (represented as 100)
+    const x = (i / (points - 1)) * 100; // Scale to full width
+    sparklinePoints.push(`${x},${Math.max(2, Math.min(28, y))}`);
   }
   
   return sparklinePoints.join(' ');
@@ -222,7 +224,8 @@ export default function CustomBot() {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      minHeight: 40
+                      minHeight: 40,
+                      padding: '0 4px'
                     }}>
                       <div style={{ 
                         position: 'absolute',
@@ -235,9 +238,9 @@ export default function CustomBot() {
                         overflow: 'hidden',
                         opacity: 0.8
                       }}>
-                        <svg width="100%" height="100%" style={{ position: 'absolute' }}>
+                        <svg width="100%" height="100%" style={{ position: 'absolute' }} viewBox="0 0 100 30" preserveAspectRatio="none">
                           <polyline
-                            points={generateSparkline(crypto.trend, 30)}
+                            points={generateSparkline(crypto.trend, 80)}
                             fill="none"
                             stroke={crypto.trend === 'up' ? '#7ef0a2' : '#ffb3b3'}
                             strokeWidth="2"
