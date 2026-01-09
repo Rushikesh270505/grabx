@@ -5,39 +5,81 @@ import GraberAIChat from '../../components/GraberAIChat';
 import { executePythonCode } from '../../services/pythonExecutor';
 
 // Default Python trading bot template
-const DEFAULT_PYTHON_CODE = `# Trading Bot Template
-# Available variables: current_price, symbol, balance, position
-# Return signals by appending to the signals list
 
-signals = []
+// Dynamic coin pool for rotation
+const COIN_POOL = [
+  { pair: 'BTCUSDT', basePrice: 60377, volatility: 0.05 },
+  { pair: 'ETHUSDT', basePrice: 3456, volatility: 0.08 },
+  { pair: 'BNBUSDT', basePrice: 567, volatility: 0.06 },
+  { pair: 'ADAUSDT', basePrice: 0.65, volatility: 0.10 },
+  { pair: 'SOLUSDT', basePrice: 145, volatility: 0.12 },
+  { pair: 'DOTUSDT', basePrice: 8.90, volatility: 0.09 },
+  { pair: 'AVAXUSDT', basePrice: 38.50, volatility: 0.11 },
+  { pair: 'MATICUSDT', basePrice: 0.92, volatility: 0.08 },
+  { pair: 'LINKUSDT', basePrice: 14.30, volatility: 0.07 },
+  { pair: 'UNIUSDT', basePrice: 6.50, volatility: 0.09 },
+  { pair: 'ATOMUSDT', basePrice: 12.80, volatility: 0.08 },
+  { pair: 'FILUSDT', basePrice: 5.20, volatility: 0.10 },
+  { pair: 'XLMUSDT', basePrice: 0.15, volatility: 0.12 },
+  { pair: 'VETUSDT', basePrice: 0.045, volatility: 0.11 },
+  { pair: 'ICPUSDT', basePrice: 13.50, volatility: 0.09 }
+];
 
-# Example: Simple moving average strategy
-if current_price > 98000:
-    signals.append({
-        'side': 'buy',
-        'price': current_price,
-        'quantity': 0.001,
-        'reason': 'Price above 98000'
-    })
-
-if current_price < 96000:
-    signals.append({
-        'side': 'sell',
-        'price': current_price,
-        'quantity': 0.001,
-        'reason': 'Price below 96000'
-    })
-
-# You can add more complex logic here
-# Technical indicators, risk management, etc.
-`;
+function generateSparkline(trend, points = 20) {
+  const sparklinePoints = [];
+  const baseY = trend === 'up' ? 25 : 5;
+  const direction = trend === 'up' ? -1 : 1;
+  
+  for (let i = 0; i < points; i++) {
+    const randomVariation = Math.random() * 3;
+    const y = baseY + (direction * i * 0.8) + (Math.random() * 4 - 2);
+    sparklinePoints.push(`${i},${Math.max(2, Math.min(28, y))}`);
+  }
+  
+  return sparklinePoints.join(' ');
+}
 
 export default function CustomBot() {
   const [code, setCode] = useState(DEFAULT_PYTHON_CODE);
-  const [events, setEvents] = useState([]); // {time, price, side, reason}
-  const [symbol, setSymbol] = useState('BTC/USDT');
+  const [symbol, setSymbol] = useState('BTCUSDT');
   const [isRunning, setIsRunning] = useState(false);
+  const [events, setEvents] = useState([]);
   const [executionError, setExecutionError] = useState(null);
+  const [displayCoins, setDisplayCoins] = useState([]);
+  const intervalRef = useRef(null);
+
+  // Rotate displayed coins every 5 seconds
+  useEffect(() => {
+    const getRandomCoins = () => {
+      const shuffled = [...COIN_POOL].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, 9).map(coin => {
+        const randomMultiplier = 0.95 + Math.random() * 0.1; // ±5% variation
+        const currentPrice = coin.basePrice * randomMultiplier;
+        const change = (Math.random() - 0.5) * 10; // -5% to +5%
+        const trend = change > 0 ? 'up' : 'down';
+        
+        return {
+          ...coin,
+          price: currentPrice,
+          change: Math.abs(change),
+          trend
+        };
+      });
+    };
+
+    setDisplayCoins(getRandomCoins());
+    
+    intervalRef.current = setInterval(() => {
+      setDisplayCoins(getRandomCoins());
+    }, 5000);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
+
   const priceRef = useRef(null);
   const lastExecutionRef = useRef(0);
 
@@ -109,11 +151,11 @@ export default function CustomBot() {
           
           {/* Trading Pair Selector */}
           <div className="glass-panel" style={{ padding: 20, height: 450 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, height: '100%' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, height: '100%' }}>
               
               {/* Left Part - Coin Selector */}
-              <div>
-                <h4 style={{ margin: 0, marginBottom: 12, color: '#5da9ff', fontSize: 16 }}>Select Trading Pair</h4>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <h4 style={{ margin: 0, marginBottom: 16, color: '#5da9ff', fontSize: 16 }}>Select Trading Pair</h4>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <span style={{ color: '#cfd3d8', fontSize: 12, fontWeight: 600 }}>Pair:</span>
                   <CoinSelector selectedPair={symbol} onPairChange={setSymbol} disabled={isRunning} />
@@ -121,68 +163,59 @@ export default function CustomBot() {
               </div>
               
               {/* Right Part - Market Overview */}
-              <div>
-                <h4 style={{ margin: 0, marginBottom: 12, color: '#5da9ff', fontSize: 16 }}>Market Overview</h4>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <h4 style={{ margin: 0, marginBottom: 16, color: '#5da9ff', fontSize: 16, textAlign: 'center' }}>Market Overview</h4>
                 <div style={{ 
                   display: 'grid', 
                   gridTemplateColumns: 'repeat(3, 1fr)', 
-                  gap: 6,
-                  height: 'calc(100% - 40px)',
+                  gap: 8,
+                  flex: 1,
                   overflow: 'hidden'
                 }}>
-                  {[
-                    { pair: 'BTCUSDT', change: 5.55, price: 60377, trend: 'up' },
-                    { pair: 'ETHUSDT', change: -2.34, price: 3456, trend: 'down' },
-                    { pair: 'BNBUSDT', change: 1.23, price: 567, trend: 'up' },
-                    { pair: 'ADAUSDT', change: 3.45, price: 0.65, trend: 'up' },
-                    { pair: 'SOLUSDT', change: -1.89, price: 145, trend: 'down' },
-                    { pair: 'DOTUSDT', change: 0.67, price: 8.90, trend: 'up' },
-                    { pair: 'AVAXUSDT', change: 4.12, price: 38.50, trend: 'up' },
-                    { pair: 'MATICUSDT', change: -0.45, price: 0.92, trend: 'down' },
-                    { pair: 'LINKUSDT', change: 2.78, price: 14.30, trend: 'up' }
-                  ].map((crypto, index) => (
-                    <div key={crypto.pair} style={{
+                  {displayCoins.map((crypto, index) => (
+                    <div key={`${crypto.pair}-${index}`} style={{
                       background: 'rgba(255,255,255,0.05)',
                       border: '1px solid rgba(93,169,255,0.2)',
                       borderRadius: 8,
-                      padding: 6,
+                      padding: 8,
                       fontSize: 10,
                       color: '#cfd3d8',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: 2,
+                      gap: 4,
                       cursor: 'pointer',
-                      transition: 'all 0.2s ease'
+                      transition: 'all 0.2s ease',
+                      height: '100%',
+                      minHeight: 80
                     }}>
-                      <div style={{ fontWeight: 600, color: '#5da9ff', fontSize: 9 }}>{crypto.pair}</div>
+                      <div style={{ fontWeight: 600, color: '#5da9ff', fontSize: 9, textAlign: 'center' }}>{crypto.pair}</div>
                       <div style={{ 
                         fontSize: 9, 
                         color: crypto.trend === 'up' ? '#7ef0a2' : '#ffb3b3',
                         fontWeight: 600,
                         display: 'flex',
                         alignItems: 'center',
+                        justifyContent: 'center',
                         gap: 2
                       }}>
-                        {crypto.trend === 'up' ? '▲' : '▼'} {Math.abs(crypto.change)}%
+                        {crypto.trend === 'up' ? '▲' : '▼'} {crypto.change.toFixed(2)}%
                       </div>
-                      <div style={{ fontSize: 9, color: '#7ef0a2', fontWeight: 600 }}>
-                        ${crypto.price.toLocaleString()}
+                      <div style={{ fontSize: 9, color: '#7ef0a2', fontWeight: 600, textAlign: 'center' }}>
+                        ${crypto.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                       </div>
                       {/* Mini Sparkline Graph */}
                       <div style={{ 
-                        height: 30, 
+                        height: 25, 
                         width: '100%',
                         background: 'rgba(0,0,0,0.2)',
                         borderRadius: 4,
                         position: 'relative',
-                        overflow: 'hidden'
+                        overflow: 'hidden',
+                        marginTop: 'auto'
                       }}>
                         <svg width="100%" height="100%" style={{ position: 'absolute' }}>
                           <polyline
-                            points={crypto.trend === 'up' 
-                              ? '0,25 5,22 10,20 15,18 20,15 25,12 30,8 35,10 40,5 45,7 50,3 55,6 60,2'
-                              : '0,5 5,8 10,10 15,12 20,15 25,18 30,22 35,20 40,25 45,23 50,27 55,24 60,28'
-                            }
+                            points={generateSparkline(crypto.trend)}
                             fill="none"
                             stroke={crypto.trend === 'up' ? '#7ef0a2' : '#ffb3b3'}
                             strokeWidth="1.5"
