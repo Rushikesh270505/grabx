@@ -109,9 +109,50 @@ export default function CustomBot() {
           
           {/* Trading Pair Selector */}
           <div className="glass-panel" style={{ padding: 20, height: 450 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-              <span style={{ color: '#cfd3d8', fontSize: 14, fontWeight: 600 }}>Trading Pair:</span>
-              <CoinSelector selectedPair={symbol} onPairChange={setSymbol} disabled={isRunning} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, height: '100%' }}>
+              
+              {/* Left Part - Coin Selector */}
+              <div>
+                <h4 style={{ margin: 0, marginBottom: 12, color: '#5da9ff', fontSize: 16 }}>Select Trading Pair</h4>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <span style={{ color: '#cfd3d8', fontSize: 12, fontWeight: 600 }}>Pair:</span>
+                  <CoinSelector selectedPair={symbol} onPairChange={setSymbol} disabled={isRunning} />
+                </div>
+              </div>
+              
+              {/* Right Part - Market Overview */}
+              <div>
+                <h4 style={{ margin: 0, marginBottom: 12, color: '#5da9ff', fontSize: 16 }}>Market Overview</h4>
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: '1fr 1fr', 
+                  gap: 8,
+                  height: 'calc(100% - 40px)',
+                  overflow: 'hidden'
+                }}>
+                  {['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'ADAUSDT', 'SOLUSDT', 'DOTUSDT'].map((pair, index) => (
+                    <div key={pair} style={{
+                      background: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(93,169,255,0.2)',
+                      borderRadius: 8,
+                      padding: 8,
+                      fontSize: 12,
+                      color: '#cfd3d8',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 4
+                    }}>
+                      <div style={{ fontWeight: 600, color: '#5da9ff' }}>{pair}</div>
+                      <div style={{ fontSize: 11, color: '#9aa1aa' }}>
+                        {index % 2 === 0 ? '▲' : '▼'} {(Math.random() * 10).toFixed(2)}%
+                      </div>
+                      <div style={{ fontSize: 11, color: '#7ef0a2' }}>
+                        ${(Math.random() * 1000 + 100).toFixed(2)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
           

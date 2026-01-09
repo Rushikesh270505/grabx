@@ -132,9 +132,9 @@ export default function CoinSelector({ selectedPair, onPairChange, disabled = fa
       <div style={{ marginBottom: '16px' }}>
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
-          gap: '12px',
-          maxHeight: '350px',
+          gridTemplateColumns: '1fr 1fr', 
+          gap: '8px',
+          maxHeight: '120px',
           overflowY: 'auto'
         }}>
           {isLoading ? (
@@ -152,7 +152,7 @@ export default function CoinSelector({ selectedPair, onPairChange, disabled = fa
                   onClick={() => !disabled && onPairChange(pair)}
                   className="glass-panel"
                   style={{
-                    padding: '12px',
+                    padding: '8px',
                     cursor: disabled ? 'not-allowed' : 'pointer',
                     border: isSelected ? '2px solid #5da9ff' : '1px solid rgba(255,255,255,0.1)',
                     background: isSelected ? 'rgba(93,169,255,0.15)' : 'rgba(255,255,255,0.05)',
@@ -160,13 +160,13 @@ export default function CoinSelector({ selectedPair, onPairChange, disabled = fa
                     opacity: disabled ? 0.6 : 1
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '14px', fontWeight: '700' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: '700' }}>
                       {pair.slice(0, -4)}/{pair.slice(-4)}
                     </span>
                     {priceData && (
                       <span style={{ 
-                        fontSize: '12px',
+                        fontSize: '10px',
                         color: getPriceColor(priceData.priceChange),
                         fontWeight: '600'
                       }}>
@@ -175,7 +175,7 @@ export default function CoinSelector({ selectedPair, onPairChange, disabled = fa
                     )}
                   </div>
                   {priceData && (
-                    <div style={{ fontSize: '13px', color: '#cfd3d8' }}>
+                    <div style={{ fontSize: '11px', color: '#cfd3d8' }}>
                       {formatPrice(priceData.price)}
                     </div>
                   )}
