@@ -2838,6 +2838,25 @@ This gives you full control over when and how to apply the generated code.`,
         </div>
         <div className="header-controls">
           <button
+            className="platform-btn codechef-btn"
+            onClick={() => {
+              setInput('Solve CodeChef problem - Please specify the problem code or use the CodeChef form');
+              setShowCodeChefForm(true);
+            }}
+            title="Open CodeChef Problem Solver"
+          >
+            🍳 CodeChef
+          </button>
+          <button
+            className="platform-btn leetcode-btn"
+            onClick={() => {
+              setInput('Solve LeetCode problem - Please specify the problem name or number');
+            }}
+            title="Open LeetCode Problem Solver"
+          >
+            💻 LeetCode
+          </button>
+          <button
             className={`agent-mode-toggle ${agentMode ? 'active' : ''}`}
             onClick={() => setAgentMode(!agentMode)}
             title={agentMode ? 'Agent Mode ON - Auto-insert code' : 'Agent Mode OFF - Manual control'}
