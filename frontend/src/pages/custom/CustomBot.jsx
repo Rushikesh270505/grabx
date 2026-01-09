@@ -95,89 +95,104 @@ export default function CustomBot() {
 
   return (
     <div style={{ padding: 24, color: '#fff' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div>
-          <h1 style={{ margin: 0, marginBottom: 8 }}>Custom Python Bot</h1>
-          <p style={{ color: '#9aa1aa', margin: 0 }}>Write simple trading rules and see live signals on the chart.</p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ color: '#cfd3d8', fontSize: 14 }}>Trading Pair:</span>
-          <CoinSelector selectedPair={symbol} onPairChange={setSymbol} disabled={isRunning} />
+      {/* Header with Trading Pair Selector */}
+      <div className="glass-panel" style={{ padding: 20, marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1 style={{ margin: 0, marginBottom: 8, fontSize: 32, color: '#5da9ff' }}>Custom Python Bot</h1>
+            <p style={{ color: '#9aa1aa', margin: 0, fontSize: 16 }}>Write simple trading rules and see live signals on the chart.</p>
+          </div>
+          <div className="glass-panel" style={{ padding: 16, background: 'rgba(93,169,255,0.1)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ color: '#cfd3d8', fontSize: 14, fontWeight: 600 }}>Trading Pair:</span>
+              <CoinSelector selectedPair={symbol} onPairChange={setSymbol} disabled={isRunning} />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 20 }}>
-        {/* Left Column: Chart & Dashboard */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* Chart without Coin Selector */}
-          <div className="glass-panel" style={{ padding: 20, height: 400 }}>
-            <h3 style={{ margin: 0, marginBottom: 16, color: '#5da9ff' }}>📈 Live Chart</h3>
-            <div style={{ height: 'calc(100% - 40px)' }}>
+      {/* Main Content Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+        
+        {/* Left Side: Chart and Dashboard */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          
+          {/* Chart Section */}
+          <div className="glass-panel" style={{ padding: 20, minHeight: 450 }}>
+            <h3 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 20 }}>📈 Live Chart</h3>
+            <div style={{ height: 380, background: 'rgba(0,0,0,0.2)', borderRadius: 12, padding: 12 }}>
               <PairChart pair={symbol} liveSymbol={symbol.replace('/','').toLowerCase()} />
             </div>
           </div>
 
-          {/* Dashboard */}
+          {/* Dashboard Section */}
           <div className="glass-panel" style={{ padding: 20 }}>
-            <h3 style={{ marginTop: 0, marginBottom: 16, color: '#5da9ff' }}>📊 Dashboard</h3>
+            <h3 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 20 }}>📊 Trading Dashboard</h3>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#7ef0a2', marginBottom: 4 }}>
+            {/* Signal Stats */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+              <div className="glass-panel" style={{ padding: 16, textAlign: 'center', background: 'rgba(126,240,162,0.1)' }}>
+                <div style={{ fontSize: 32, fontWeight: 'bold', color: '#7ef0a2', marginBottom: 8 }}>
                   {events.filter(e => e.side === 'buy').length}
                 </div>
-                <div style={{ fontSize: 12, color: '#9aa1aa' }}>Buy Signals</div>
+                <div style={{ fontSize: 14, color: '#9aa1aa', fontWeight: 600 }}>Buy Signals</div>
               </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#ffb3b3', marginBottom: 4 }}>
+              <div className="glass-panel" style={{ padding: 16, textAlign: 'center', background: 'rgba(255,179,179,0.1)' }}>
+                <div style={{ fontSize: 32, fontWeight: 'bold', color: '#ffb3b3', marginBottom: 8 }}>
                   {events.filter(e => e.side === 'sell').length}
                 </div>
-                <div style={{ fontSize: 12, color: '#9aa1aa' }}>Sell Signals</div>
+                <div style={{ fontSize: 14, color: '#9aa1aa', fontWeight: 600 }}>Sell Signals</div>
               </div>
             </div>
 
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <span style={{ color: '#cfd3d8', fontSize: 14 }}>Bot Status</span>
+            {/* Bot Status */}
+            <div className="glass-panel" style={{ padding: 16, marginBottom: 20, background: 'rgba(255,255,255,0.05)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ color: '#cfd3d8', fontSize: 16, fontWeight: 600 }}>Bot Status</span>
                 <span style={{ 
                   color: isRunning ? '#7ef0a2' : '#ff6b6b',
-                  fontSize: 12,
-                  fontWeight: 600 
+                  fontSize: 14,
+                  fontWeight: 700,
+                  padding: '4px 12px',
+                  borderRadius: 20,
+                  background: isRunning ? 'rgba(126,240,162,0.2)' : 'rgba(255,107,107,0.2)'
                 }}>
                   {isRunning ? '🟢 RUNNING' : '🔴 STOPPED'}
                 </span>
               </div>
               <div style={{ 
-                padding: 8,
-                background: 'rgba(255,255,255,0.03)',
-                borderRadius: 6,
-                fontSize: 11,
+                padding: 12,
+                background: 'rgba(0,0,0,0.3)',
+                borderRadius: 8,
+                fontSize: 13,
                 color: '#9aa1aa',
-                maxHeight: 60,
-                overflow: 'auto'
+                lineHeight: 1.5
               }}>
-                {isRunning ? 'Bot is executing trading rules on price updates...' : 'Bot is stopped. Click Start to begin trading.'}
-                {executionError && `\n❌ ${executionError}`}
+                {isRunning ? '🤖 Bot is executing trading rules on price updates...' : '⏸️ Bot is stopped. Click Start to begin trading.'}
+                {executionError && `\n❌ Error: ${executionError}`}
               </div>
             </div>
 
+            {/* Recent Signals */}
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <span style={{ color: '#cfd3d8', fontSize: 14 }}>Recent Signals</span>
-                <span style={{ color: '#5da9ff', fontSize: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ color: '#cfd3d8', fontSize: 16, fontWeight: 600 }}>Recent Signals</span>
+                <span style={{ color: '#5da9ff', fontSize: 14, fontWeight: 600 }}>
                   {events.length} total
                 </span>
               </div>
               <div style={{ 
-                maxHeight: 200,
+                maxHeight: 250,
                 overflowY: 'auto',
-                background: 'rgba(255,255,255,0.02)',
-                borderRadius: 6,
-                padding: 8
+                background: 'rgba(0,0,0,0.2)',
+                borderRadius: 12,
+                padding: 12
               }}>
                 {events.length === 0 ? (
-                  <div style={{ textAlign: 'center', color: '#9aa1aa', fontSize: 12, padding: 20 }}>
-                    No signals generated yet
+                  <div style={{ textAlign: 'center', color: '#9aa1aa', fontSize: 14, padding: 30 }}>
+                    <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.5 }}>📈</div>
+                    <div>No signals generated yet</div>
+                    <div style={{ fontSize: 12, marginTop: 8 }}>Start the bot to see trading activity</div>
                   </div>
                 ) : (
                   events.slice(-10).reverse().map((ev, i) => (
@@ -185,28 +200,30 @@ export default function CustomBot() {
                       display: 'flex', 
                       justifyContent: 'space-between', 
                       alignItems: 'center',
-                      padding: '8px 12px',
-                      marginBottom: 6,
+                      padding: '12px 16px',
+                      marginBottom: 8,
                       background: 'rgba(255,255,255,0.05)',
-                      borderRadius: 6,
-                      borderLeft: `3px solid ${ev.side === 'buy' ? '#7ef0a2' : '#ffb3b3'}`
+                      borderRadius: 8,
+                      borderLeft: `4px solid ${ev.side === 'buy' ? '#7ef0a2' : '#ffb3b3'}`,
+                      transition: 'all 0.2s ease'
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <div style={{ 
-                          width: 8, 
-                          height: 8, 
+                          width: 12, 
+                          height: 12, 
                           borderRadius: '50%',
-                          background: ev.side === 'buy' ? '#7ef0a2' : '#ffb3b3'
+                          background: ev.side === 'buy' ? '#7ef0a2' : '#ffb3b3',
+                          boxShadow: `0 0 8px ${ev.side === 'buy' ? '#7ef0a2' : '#ffb3b3'}`
                         }} />
                         <div>
-                          <div style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: 12 }}>{ev.side}</div>
-                          <div style={{ fontSize: 10, color: '#9aa1aa' }}>{ev.reason}</div>
+                          <div style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: 14 }}>{ev.side}</div>
+                          <div style={{ fontSize: 12, color: '#9aa1aa' }}>{ev.reason}</div>
                         </div>
                       </div>
                       <div style={{ 
                         color: ev.side === 'buy' ? '#7ef0a2' : '#ffb3b3', 
-                        fontWeight: 600,
-                        fontSize: 12
+                        fontWeight: 700,
+                        fontSize: 14
                       }}>
                         {ev.price}
                       </div>
@@ -218,10 +235,11 @@ export default function CustomBot() {
           </div>
         </div>
 
-        {/* Right Column: AI Chat & Editor */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {/* Right Side: AI Chat and Editor */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          
           {/* Graber AI Chat */}
-          <div style={{ height: 400 }}>
+          <div style={{ height: 450 }}>
             <GraberAIChat 
               onCodeGenerated={(generatedCode) => {
                 setCode(generatedCode);
@@ -236,27 +254,38 @@ export default function CustomBot() {
 
           {/* Code Editor */}
           <div className="glass-panel" style={{ padding: 20, flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <h3 style={{ margin: 0, color: '#5da9ff' }}>📝 Trading Rules</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ margin: 0, color: '#5da9ff', fontSize: 20 }}>📝 Trading Rules</h3>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
                   onClick={() => setCode(DEFAULT_PYTHON_CODE)}
                   style={{
-                    padding: '6px 12px',
+                    padding: '8px 16px',
                     background: 'rgba(93, 169, 255, 0.2)',
                     border: '1px solid rgba(93, 169, 255, 0.3)',
-                    borderRadius: 6,
+                    borderRadius: 8,
                     color: '#5da9ff',
-                    fontSize: 12,
-                    cursor: 'pointer'
+                    fontSize: 14,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
                   }}
                 >
-                  Reset
+                  🔄 Reset
                 </button>
               </div>
             </div>
-            <div style={{ marginBottom: 12, color: '#9aa1aa', fontSize: 14 }}>
-              Use <code style={{ background: 'rgba(93,169,255,0.1)', padding: '2px 6px', borderRadius: 4 }}>current_price</code> and <code style={{ background: 'rgba(93,169,255,0.1)', padding: '2px 6px', borderRadius: 4 }}>signals</code> variables.
+            <div style={{ marginBottom: 16, padding: 12, background: 'rgba(93,169,255,0.1)', borderRadius: 8 }}>
+              <div style={{ color: '#cfd3d8', fontSize: 14, marginBottom: 8 }}>
+                <strong>Available Variables:</strong>
+              </div>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <code style={{ background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: 4, fontSize: 12 }}>current_price</code>
+                <code style={{ background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: 4, fontSize: 12 }}>balance</code>
+                <code style={{ background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: 4, fontSize: 12 }}>position</code>
+                <code style={{ background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: 4, fontSize: 12 }}>candles</code>
+                <code style={{ background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: 4, fontSize: 12 }}>signals</code>
+              </div>
             </div>
             <textarea
               value={code}
@@ -265,18 +294,18 @@ export default function CustomBot() {
               style={{
                 width: '100%',
                 height: 300,
-                padding: 12,
-                borderRadius: 8,
-                background: 'rgba(255,255,255,0.03)',
+                padding: 16,
+                borderRadius: 12,
+                background: 'rgba(0,0,0,0.3)',
                 color: '#eaf4ff',
-                border: '1px solid rgba(255,255,255,0.08)',
-                fontSize: 13,
+                border: '1px solid rgba(93,169,255,0.2)',
+                fontSize: 14,
                 fontFamily: 'Monaco, Menlo, monospace',
                 resize: 'vertical',
-                lineHeight: 1.5
+                lineHeight: 1.6
               }}
             />
-            <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+            <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
               <button
                 onClick={() => {
                   setIsRunning(!isRunning);
@@ -286,14 +315,16 @@ export default function CustomBot() {
                   }
                 }}
                 style={{
-                  padding: '10px 20px',
+                  padding: '12px 24px',
                   background: isRunning ? '#ff6b6b' : '#7ef0a2',
                   border: 'none',
-                  borderRadius: 8,
+                  borderRadius: 10,
                   color: '#000',
-                  fontWeight: 600,
+                  fontWeight: 700,
                   cursor: 'pointer',
-                  fontSize: 14
+                  fontSize: 16,
+                  transition: 'all 0.2s ease',
+                  boxShadow: `0 4px 12px ${isRunning ? 'rgba(255,107,107,0.3)' : 'rgba(126,240,162,0.3)'}`
                 }}
               >
                 {isRunning ? '⏹️ Stop Bot' : '▶️ Start Bot'}
@@ -304,13 +335,15 @@ export default function CustomBot() {
                   setExecutionError(null);
                 }}
                 style={{
-                  padding: '10px 20px',
+                  padding: '12px 24px',
                   background: 'rgba(255,255,255,0.1)',
                   border: '1px solid rgba(255,255,255,0.2)',
-                  borderRadius: 8,
+                  borderRadius: 10,
                   color: '#fff',
                   cursor: 'pointer',
-                  fontSize: 14
+                  fontSize: 16,
+                  fontWeight: 600,
+                  transition: 'all 0.2s ease'
                 }}
               >
                 🗑️ Clear Signals
