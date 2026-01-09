@@ -134,7 +134,7 @@ export default function CoinSelector({ selectedPair, onPairChange, disabled = fa
           display: 'grid', 
           gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
           gap: '12px',
-          maxHeight: '400px',
+          maxHeight: '120px',
           overflowY: 'auto'
         }}>
           {isLoading ? (

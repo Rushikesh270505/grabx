@@ -95,20 +95,10 @@ export default function CustomBot() {
 
   return (
     <div style={{ padding: 24, color: '#fff' }}>
-      {/* Header with Trading Pair Selector */}
-      <div className="glass-panel" style={{ padding: 20, marginBottom: 24 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h1 style={{ margin: 0, marginBottom: 8, fontSize: 32, color: '#5da9ff' }}>Custom Python Bot</h1>
-            <p style={{ color: '#9aa1aa', margin: 0, fontSize: 16 }}>Write simple trading rules and see live signals on the chart.</p>
-          </div>
-          <div className="glass-panel" style={{ padding: 16, background: 'rgba(93,169,255,0.1)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ color: '#cfd3d8', fontSize: 14, fontWeight: 600 }}>Trading Pair:</span>
-              <CoinSelector selectedPair={symbol} onPairChange={setSymbol} disabled={isRunning} />
-            </div>
-          </div>
-        </div>
+      {/* Simple Header */}
+      <div className="glass-panel" style={{ padding: 20, marginBottom: 24, textAlign: 'center' }}>
+        <h1 style={{ margin: 0, fontSize: 32, color: '#5da9ff' }}>Custom Python3 Bot</h1>
+        <p style={{ color: '#9aa1aa', margin: 0, fontSize: 16, marginTop: 8 }}>Write simple trading rules and see live signals on the chart.</p>
       </div>
 
       {/* Main Content Grid */}
@@ -116,6 +106,14 @@ export default function CustomBot() {
         
         {/* Left Side: Chart and Dashboard */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          
+          {/* Trading Pair Selector */}
+          <div className="glass-panel" style={{ padding: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ color: '#cfd3d8', fontSize: 14, fontWeight: 600 }}>Trading Pair:</span>
+              <CoinSelector selectedPair={symbol} onPairChange={setSymbol} disabled={isRunning} />
+            </div>
+          </div>
           
           {/* Chart Section */}
           <div className="glass-panel" style={{ padding: 20, minHeight: 450 }}>
