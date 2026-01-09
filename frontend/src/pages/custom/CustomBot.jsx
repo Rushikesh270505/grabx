@@ -108,8 +108,8 @@ export default function CustomBot() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           
           {/* Trading Pair Selector */}
-          <div className="glass-panel" style={{ padding: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div className="glass-panel" style={{ padding: 20, height: 450 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
               <span style={{ color: '#cfd3d8', fontSize: 14, fontWeight: 600 }}>Trading Pair:</span>
               <CoinSelector selectedPair={symbol} onPairChange={setSymbol} disabled={isRunning} />
             </div>
