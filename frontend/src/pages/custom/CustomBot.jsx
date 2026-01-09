@@ -61,32 +61,67 @@ export default function CustomBot() {
   const [displayCoins, setDisplayCoins] = useState([]);
   const intervalRef = useRef(null);
 
-  // Rotate displayed coins every 5 seconds
+  // Rotate displayed coins one by one every 15 seconds
   useEffect(() => {
-    const getRandomCoins = () => {
+    const getRandomCoin = () => {
+      const availableCoins = COIN_POOL.filter(coin => 
+        !displayCoins.some(displayed => displayed.pair === coin.pair)
+      );
+      
+      if (availableCoins.length === 0) {
+        // If all coins are displayed, reset and start over
+        return COIN_POOL[Math.floor(Math.random() * COIN_POOL.length)];
+      }
+      
+      const selectedCoin = availableCoins[Math.floor(Math.random() * availableCoins.length)];
+      
+      // Simulate 1-minute price movement
+      const randomMultiplier = 0.998 + Math.random() * 0.004; // ±0.2% variation for 1 minute
+      const currentPrice = selectedCoin.basePrice * randomMultiplier;
+      const change = (Math.random() - 0.5) * 0.8; // ±0.4% for 1-minute timeframe
+      const trend = change > 0 ? 'up' : 'down';
+      
+      return {
+        ...selectedCoin,
+        price: currentPrice,
+        change: Math.abs(change),
+        trend,
+        timeframe: '1m'
+      };
+    };
+
+    // Initialize with 9 random coins
+    if (displayCoins.length === 0) {
+      const initialCoins = [];
       const shuffled = [...COIN_POOL].sort(() => Math.random() - 0.5);
-      return shuffled.slice(0, 9).map(coin => {
-        // Simulate 1-minute price movement
-        const randomMultiplier = 0.998 + Math.random() * 0.004; // ±0.2% variation for 1 minute
+      for (let i = 0; i < 9; i++) {
+        const coin = shuffled[i];
+        const randomMultiplier = 0.998 + Math.random() * 0.004;
         const currentPrice = coin.basePrice * randomMultiplier;
-        const change = (Math.random() - 0.5) * 0.8; // ±0.4% for 1-minute timeframe
+        const change = (Math.random() - 0.5) * 0.8;
         const trend = change > 0 ? 'up' : 'down';
         
-        return {
+        initialCoins.push({
           ...coin,
           price: currentPrice,
           change: Math.abs(change),
           trend,
           timeframe: '1m'
-        };
-      });
-    };
-
-    setDisplayCoins(getRandomCoins());
+        });
+      }
+      setDisplayCoins(initialCoins);
+    }
     
+    // Rotate one coin every 15 seconds
     intervalRef.current = setInterval(() => {
-      setDisplayCoins(getRandomCoins());
-    }, 5000);
+      setDisplayCoins(prevCoins => {
+        const newCoins = [...prevCoins];
+        const randomIndex = Math.floor(Math.random() * 9);
+        const newCoin = getRandomCoin();
+        newCoins[randomIndex] = newCoin;
+        return newCoins;
+      });
+    }, 15000);
 
     return () => {
       if (intervalRef.current) {
