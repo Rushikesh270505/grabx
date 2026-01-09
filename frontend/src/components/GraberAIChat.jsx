@@ -15,7 +15,117 @@ const GraberAIChat = ({ onCodeGenerated, onCodeModified }) => {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [currentCode, setCurrentCode] = useState('');
-  const [agentMode, setAgentMode] = useState(false); // Agent Mode toggle
+  const [agentMode, setAgentMode] = useState(false);
+  
+  // Interactive CodeChef Form Component
+  const [showCodeChefForm, setShowCodeChefForm] = useState(false);
+  const [contestCode, setContestCode] = useState('');
+  const [problemNumber, setProblemNumber] = useState('');
+  const [problemName, setProblemName] = useState('');
+  const [difficulty, setDifficulty] = useState('');
+
+  const CodeChefForm = () => (
+    <div className="codechef-form">
+      <div className="form-header">
+        <h4>📝 CodeChef Problem Request Form</h4>
+        <button 
+          className="close-form-btn"
+          onClick={() => setShowCodeChefForm(false)}
+        >
+          ✕
+        </button>
+      </div>
+      
+      <div className="form-grid">
+        <div className="form-group">
+          <label>Contest Code:</label>
+          <input
+            type="text"
+            placeholder="START, FLOW, HS, etc."
+            value={contestCode}
+            onChange={(e) => setContestCode(e.target.value)}
+            className="form-input"
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>Problem Number:</label>
+          <input
+            type="text"
+            placeholder="01, 001, etc."
+            value={problemNumber}
+            onChange={(e) => setProblemNumber(e.target.value)}
+            className="form-input"
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>Problem Name (Optional):</label>
+          <input
+            type="text"
+            placeholder="Add Two Numbers, etc."
+            value={problemName}
+            onChange={(e) => setProblemName(e.target.value)}
+            className="form-input"
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>Difficulty (Optional):</label>
+          <select
+            value={difficulty}
+            onChange={(e) => setDifficulty(e.target.value)}
+            className="form-select"
+          >
+            <option value="">Select Difficulty</option>
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
+        </div>
+      </div>
+      
+      <div className="form-examples">
+        <p><strong>Examples:</strong></p>
+        <ul>
+          <li>Contest: FLOW, Problem: 001 → FLOW001</li>
+          <li>Contest: START, Problem: 01 → START01</li>
+          <li>Contest: HS, Problem: 08TEST → HS08TEST</li>
+        </ul>
+      </div>
+      
+      <div className="form-actions">
+        <button
+          className="submit-form-btn"
+          onClick={() => {
+            const problemCode = `${contestCode}${problemNumber}`.toUpperCase();
+            const request = `Solve CodeChef problem ${problemCode}${problemName ? ` (${problemName})` : ''}${difficulty ? ` - ${difficulty}` : ''}`;
+            setInput(request);
+            setShowCodeChefForm(false);
+            setContestCode('');
+            setProblemNumber('');
+            setProblemName('');
+            setDifficulty('');
+          }}
+        >
+          Generate Solution
+        </button>
+        
+        <button
+          className="cancel-form-btn"
+          onClick={() => {
+            setShowCodeChefForm(false);
+            setContestCode('');
+            setProblemNumber('');
+            setProblemName('');
+            setDifficulty('');
+          }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -2189,40 +2299,72 @@ if __name__ == "__main__":
         response = `🎯 **CodeChef Problem Solver Ready!**
 
 **📋 Please Specify the Problem:**
-I can solve any CodeChef problem, but I need to know which specific problem you want me to solve.
+I can solve any CodeChef problem! Use the interactive form below or type your request:
 
-**💡 Common CodeChef Problems I Can Solve:**
+**🔧 Interactive Problem Request:**
+\`\`\`
+📝 CodeChef Problem Request Form:
+┌─────────────────────────────────────┐
+│ Contest Code: [START, FLOW, etc.]  │
+│ Problem Number: [001, 002, etc.]   │
+│ Problem Name: [Optional]            │
+│ Difficulty: [Easy, Medium, Hard]     │
+└─────────────────────────────────────┘
+
+📋 Examples:
+• Contest: FLOW, Problem: 001 → "FLOW001"
+• Contest: START, Problem: 01 → "START01" 
+• Contest: HS, Problem: 08TEST → "HS08TEST"
+\`\`\`
+
+**💡 Quick Request Examples:**
+• "Solve CodeChef problem START01"
+• "Give me code for CodeChef FLOW001" 
+• "Help with CodeChef problem HS08TEST"
+• "Solve CodeChef DIVPROBLEM"
+• "CodeChef problem FLOW007 reverse number"
+
+**� Common CodeChef Problems I Can Solve:**
 • **START01** - Life, the Universe, and Everything
 • **TEST** - Basic input/output practice
-• **DIVPROBLEM** - Chef and Divisor Tree
 • **FLOW001** - Add Two Numbers
-• **HS08TEST** - ATM Problem
 • **FLOW007** - Reverse Number
 • **FLOW008** - What is the profit?
 • **FLOW009** - Sum of Digits
 • **FLOW010** - Factorial
 • **FLOW016** - Reverse The Number
-
-**🔧 How to Request:**
-• "Solve CodeChef problem START01"
-• "Give me code for CodeChef FLOW001"
-• "Help with CodeChef ATM problem"
-• "Solve this CodeChef problem: [problem name]"
-
-**📊 What I Provide:**
-• **Optimized Solutions** with proper time complexity
-• **Multiple Approaches** for different constraints
-• **Test Cases** for validation
-• **Competitive Programming Best Practices**
-• **Fast Input/Output** handling
-• **Memory Optimization** techniques
+• **HS08TEST** - ATM Problem
+• **DIVPROBLEM** - Chef and Divisor Tree
+• **ZCO12001** - Matched Brackets
+• **ZCO13001** - Pairing Chefs
 
 **🚀 Ready to Solve:**
-Just tell me the specific CodeChef problem name or provide the problem statement, and I'll generate the perfect solution!
+Just tell me the specific CodeChef problem code or fill in the form above, and I'll generate the perfect solution with:
+• ✅ **Optimized algorithms** with proper time complexity
+• ✅ **Fast I/O** handling for competitive programming
+• ✅ **Multiple approaches** for different constraints
+• ✅ **Test cases** for validation
+• ✅ **Memory optimization** techniques
+
+**📝 How to Use the Form:**
+1. **Contest Code:** Enter the contest identifier (START, FLOW, HS, etc.)
+2. **Problem Number:** Enter the problem number (01, 001, etc.)
+3. **Problem Name:** Optional - enter if you know it
+4. **Difficulty:** Optional - helps me choose the best approach
+
+**Example Usage:**
+\`\`\`
+Contest Code: FLOW
+Problem Number: 001
+Problem Name: Add Two Numbers
+Difficulty: Easy
+\`\`\`
+
+This will generate: "Solve CodeChef problem FLOW001"
 
 ${agentMode ? '🤖 **Agent Mode:** Solution will be automatically applied!' : '📝 **Next Steps:** Use "Insert to Editor" or enable Agent Mode for automatic deployment.'}
 
-💡 **Pro Tip:** Include the problem name or constraints for the most accurate solution!`;
+💡 **Pro Tip:** The more specific you are with the problem code, the more accurate and optimized the solution will be!`;
         
         confidence = 0.95;
         confidenceColor = 'GREEN';
@@ -2690,6 +2832,152 @@ This gives you full control over when and how to apply the generated code.`,
   return (
     <div className="graber-ai-chat">
       <div className="chat-header">
+        <div className="header-title">
+          <h2>🤖 Graber AI</h2>
+          <span className="subtitle">Perfectly Accurate Trading & Coding Assistant</span>
+        </div>
+        <div className="header-controls">
+          <button
+            className={`agent-mode-toggle ${agentMode ? 'active' : ''}`}
+            onClick={() => setAgentMode(!agentMode)}
+            title={agentMode ? 'Agent Mode ON - Auto-insert code' : 'Agent Mode OFF - Manual control'}
+          >
+            🤖 Agent Mode: {agentMode ? 'ON' : 'OFF'}
+          </button>
+        </div>
+      </div>
+
+      <div className="chat-messages">
+        {messages.map((message) => (
+          <div key={message.id} className={`message ${message.type}`}>
+            <div className="message-content">
+              {message.type === 'user' ? (
+                <p>{message.content}</p>
+              ) : (
+                <div>
+                  <div dangerouslySetInnerHTML={{ __html: message.content.replace(/\n/g, '<br>') }} />
+                  {message.generatedCode && (
+                    <div className="generated-code-section">
+                      <div className="code-header">
+                        <span className="code-label">Generated Strategy</span>
+                        <div className="code-actions">
+                          <button
+                            className="code-action-btn"
+                            onClick={() => navigator.clipboard.writeText(message.generatedCode)}
+                            title="Copy to clipboard"
+                          >
+                            📋 Copy
+                          </button>
+                          <button
+                            className="code-action-btn"
+                            onClick={() => downloadAsWord(message.generatedCode)}
+                            title="Download as Word document"
+                          >
+                            📄 Download
+                          </button>
+                          <button
+                            className="code-action-btn insert-btn"
+                            onClick={() => {
+                              if (onCodeGenerated) {
+                                onCodeGenerated(message.generatedCode);
+                              }
+                            }}
+                            title="Insert to editor"
+                          >
+                            Insert to Editor
+                          </button>
+                        </div>
+                      </div>
+                      <pre className="generated-code">
+                        <code>{message.generatedCode}</code>
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="message-meta">
+              <span className="timestamp">
+                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+              {message.confidence && (
+                <span className={`confidence ${message.confidenceColor.toLowerCase()}`}>
+                  {Math.round(message.confidence * 100)}%
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+        
+        {/* CodeChef Form Modal */}
+        {showCodeChefForm && (
+          <div className="form-modal-overlay">
+            <div className="form-modal">
+              <CodeChefForm />
+            </div>
+          </div>
+        )}
+        
+        {isTyping && (
+          <div className="message assistant">
+            <div className="typing-indicator">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="chat-input-container">
+        <div className="input-actions">
+          <button
+            className="codechef-form-btn"
+            onClick={() => setShowCodeChefForm(true)}
+            title="Open CodeChef Problem Form"
+          >
+            📝 CodeChef Form
+          </button>
+        </div>
+        <div className="input-wrapper">
+          <textarea
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Ask me about trading strategies, coding problems, or CodeChef solutions..."
+            className="chat-input"
+            rows={1}
+          />
+          <button
+            onClick={handleSend}
+            disabled={!input.trim() || isTyping}
+            className="send-button"
+          >
+            {isTyping ? '⏳' : '🚀'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const clearChat = () => {
+    setMessages([
+      {
+        id: 1,
+        type: 'assistant',
+        content: 'Chat cleared. How can I help you with your trading strategy today?',
+        timestamp: new Date(),
+        confidence: 1.0,
+        confidenceColor: 'GREEN'
+      }
+    ]);
+  };
+
+  return (
+    <div className="graber-ai-chat">
+      <div className="chat-header">
         <div className="chat-title">
           <div className="ai-avatar">🤖</div>
           <div>
@@ -2771,15 +3059,21 @@ This gives you full control over when and how to apply the generated code.`,
           </div>
         ))}
         
+        {/* CodeChef Form Modal */}
+        {showCodeChefForm && (
+          <div className="form-modal-overlay">
+            <div className="form-modal">
+              <CodeChefForm />
+            </div>
+          </div>
+        )}
+        
         {isTyping && (
           <div className="message assistant">
-            <div className="message-avatar">🤖</div>
-            <div className="message-content">
-              <div className="typing-indicator">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
+            <div className="typing-indicator">
+              <span></span>
+              <span></span>
+              <span></span>
             </div>
           </div>
         )}
