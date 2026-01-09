@@ -151,80 +151,99 @@ export default function CustomBot() {
       {/* Main Content Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
         
-        {/* Left Side: Chart and Dashboard */}
+        {/* Left Side: Market Overview, Select Pair, Chart & Dashboard */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           
-          {/* Market Overview */}
-          <div className="glass-panel" style={{ padding: 20, height: 450 }}>
-            <h4 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 18, textAlign: 'center' }}>Market Overview</h4>
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(3, 1fr)', 
-              gap: 12,
-              height: 'calc(100% - 50px)',
-              overflow: 'hidden'
-            }}>
-              {displayCoins.map((crypto, index) => (
-                <div key={`${crypto.pair}-${index}`} style={{
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(93,169,255,0.2)',
-                  borderRadius: 8,
-                  padding: 10,
-                  fontSize: 10,
-                  color: '#cfd3d8',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 4,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  height: '100%',
-                  minHeight: 90,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                }}>
-                  <div style={{ fontWeight: 600, color: '#5da9ff', fontSize: 10, textAlign: 'center' }}>{crypto.pair}</div>
-                  <div style={{ 
-                    fontSize: 10, 
-                    color: crypto.trend === 'up' ? '#7ef0a2' : '#ffb3b3',
-                    fontWeight: 600,
+          {/* Top Row: Market Overview and Select Pair Side by Side */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            
+            {/* Market Overview Panel */}
+            <div className="glass-panel" style={{ padding: 20, height: 450 }}>
+              <h4 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 18, textAlign: 'center' }}>Market Overview</h4>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(3, 1fr)', 
+                gap: 8,
+                height: 'calc(100% - 50px)',
+                overflow: 'hidden'
+              }}>
+                {displayCoins.map((crypto, index) => (
+                  <div key={`${crypto.pair}-${index}`} style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(93,169,255,0.2)',
+                    borderRadius: 8,
+                    padding: 8,
+                    fontSize: 9,
+                    color: '#cfd3d8',
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 2
+                    flexDirection: 'column',
+                    gap: 3,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    height: '100%',
+                    minHeight: 80,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                   }}>
-                    {crypto.trend === 'up' ? '▲' : '▼'} {crypto.change.toFixed(2)}%
+                    <div style={{ fontWeight: 600, color: '#5da9ff', fontSize: 9, textAlign: 'center' }}>{crypto.pair}</div>
+                    <div style={{ 
+                      fontSize: 9, 
+                      color: crypto.trend === 'up' ? '#7ef0a2' : '#ffb3b3',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 2
+                    }}>
+                      {crypto.trend === 'up' ? '▲' : '▼'} {crypto.change.toFixed(2)}%
+                    </div>
+                    <div style={{ fontSize: 9, color: '#7ef0a2', fontWeight: 600, textAlign: 'center' }}>
+                      ${crypto.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </div>
+                    {/* Mini Sparkline Graph */}
+                    <div style={{ 
+                      height: 25, 
+                      width: '100%',
+                      background: 'rgba(0,0,0,0.2)',
+                      borderRadius: 4,
+                      position: 'relative',
+                      overflow: 'hidden',
+                      marginTop: 'auto'
+                    }}>
+                      <svg width="100%" height="100%" style={{ position: 'absolute' }}>
+                        <polyline
+                          points={generateSparkline(crypto.trend)}
+                          fill="none"
+                          stroke={crypto.trend === 'up' ? '#7ef0a2' : '#ffb3b3'}
+                          strokeWidth="1.5"
+                        />
+                      </svg>
+                    </div>
                   </div>
-                  <div style={{ fontSize: 10, color: '#7ef0a2', fontWeight: 600, textAlign: 'center' }}>
-                    ${crypto.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                  </div>
-                  {/* Mini Sparkline Graph */}
+                ))}
+              </div>
+            </div>
+
+            {/* Select Pair Panel */}
+            <div className="glass-panel" style={{ padding: 20, height: 450 }}>
+              <h4 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 18, textAlign: 'center' }}>Select Trading Pair</h4>
+              <div style={{ height: 'calc(100% - 50px)', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                  <span style={{ color: '#cfd3d8', fontSize: 14, fontWeight: 600 }}>Current Pair:</span>
                   <div style={{ 
-                    height: 30, 
-                    width: '100%',
-                    background: 'rgba(0,0,0,0.2)',
-                    borderRadius: 4,
-                    position: 'relative',
-                    overflow: 'hidden',
-                    marginTop: 'auto'
+                    background: 'rgba(93,169,255,0.2)', 
+                    padding: '8px 16px', 
+                    borderRadius: 8,
+                    color: '#5da9ff',
+                    fontWeight: 600,
+                    fontSize: 14
                   }}>
-                    <svg width="100%" height="100%" style={{ position: 'absolute' }}>
-                      <polyline
-                        points={generateSparkline(crypto.trend)}
-                        fill="none"
-                        stroke={crypto.trend === 'up' ? '#7ef0a2' : '#ffb3b3'}
-                        strokeWidth="1.5"
-                      />
-                    </svg>
+                    {symbol}
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Trading Pair Selector */}
-          <div className="glass-panel" style={{ padding: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ color: '#cfd3d8', fontSize: 14, fontWeight: 600 }}>Trading Pair:</span>
-              <CoinSelector selectedPair={symbol} onPairChange={setSymbol} disabled={isRunning} />
+                <div style={{ flex: 1, overflow: 'hidden' }}>
+                  <CoinSelector selectedPair={symbol} onPairChange={setSymbol} disabled={isRunning} />
+                </div>
+              </div>
             </div>
           </div>
           
