@@ -192,93 +192,111 @@ export default function CustomBot() {
                     boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                     position: 'relative'
                   }}>
-                    {/* Full Panel Sparkline Graph */}
+                    {/* Top Section - Coin Name */}
                     <div style={{ 
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      background: 'rgba(0,0,0,0.1)',
-                      borderRadius: 8,
-                      overflow: 'hidden',
-                      opacity: 0.6
-                    }}>
-                      <svg width="100%" height="100%" style={{ position: 'absolute' }}>
-                        <polyline
-                          points={generateSparkline(crypto.trend, 40)}
-                          fill="none"
-                          stroke={crypto.trend === 'up' ? '#7ef0a2' : '#ffb3b3'}
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </div>
-                    
-                    {/* Content Header */}
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center',
-                      marginBottom: 4,
                       position: 'relative',
-                      zIndex: 1
+                      zIndex: 2,
+                      marginBottom: 4
                     }}>
-                      <div style={{ fontWeight: 700, color: '#ffffff', fontSize: 10, textShadow: '0 0 3px rgba(0,0,0,0.8)' }}>
+                      <div style={{ 
+                        fontWeight: 700, 
+                        color: '#ffffff', 
+                        fontSize: 11, 
+                        textShadow: '0 0 4px rgba(0,0,0,0.9)',
+                        textAlign: 'center',
+                        background: 'rgba(0,0,0,0.4)',
+                        padding: '2px 8px',
+                        borderRadius: 4,
+                        display: 'inline-block',
+                        margin: '0 auto',
+                        width: 'fit-content'
+                      }}>
                         {crypto.pair.slice(0, -4)}
                       </div>
+                    </div>
+                    
+                    {/* Center Section - Graph */}
+                    <div style={{ 
+                      flex: 1,
+                      position: 'relative',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minHeight: 40
+                    }}>
                       <div style={{ 
-                        fontSize: 8, 
-                        color: '#5da9ff',
-                        fontWeight: 600,
-                        background: 'rgba(93,169,255,0.2)',
-                        padding: '2px 6px',
-                        borderRadius: 4,
-                        textShadow: '0 0 3px rgba(0,0,0,0.8)'
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0,0,0,0.15)',
+                        borderRadius: 6,
+                        overflow: 'hidden',
+                        opacity: 0.8
                       }}>
-                        1m
+                        <svg width="100%" height="100%" style={{ position: 'absolute' }}>
+                          <polyline
+                            points={generateSparkline(crypto.trend, 30)}
+                            fill="none"
+                            stroke={crypto.trend === 'up' ? '#7ef0a2' : '#ffb3b3'}
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
                       </div>
                     </div>
                     
-                    {/* Price and Change */}
+                    {/* Bottom Section - Price and Change */}
                     <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'flex-end',
                       position: 'relative',
-                      zIndex: 1,
-                      flex: 1
+                      zIndex: 2,
+                      marginTop: 4,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
                     }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                         <div style={{ 
-                          fontSize: 11, 
+                          fontSize: 9, 
                           color: '#ffffff',
-                          fontWeight: 700,
-                          textShadow: '0 0 3px rgba(0,0,0,0.8)'
+                          fontWeight: 600,
+                          textShadow: '0 0 3px rgba(0,0,0,0.9)',
+                          background: 'rgba(0,0,0,0.4)',
+                          padding: '1px 4px',
+                          borderRadius: 3,
+                          display: 'inline-block'
                         }}>
                           ${crypto.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                         </div>
                         <div style={{ 
-                          fontSize: 9, 
+                          fontSize: 8, 
                           color: crypto.trend === 'up' ? '#7ef0a2' : '#ffb3b3',
                           fontWeight: 600,
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 4,
-                          textShadow: '0 0 3px rgba(0,0,0,0.8)'
+                          gap: 2,
+                          textShadow: '0 0 3px rgba(0,0,0,0.9)',
+                          background: 'rgba(0,0,0,0.4)',
+                          padding: '1px 4px',
+                          borderRadius: 3,
+                          display: 'inline-block'
                         }}>
-                          <span style={{ fontSize: 10 }}>{crypto.trend === 'up' ? '▲' : '▼'}</span>
+                          <span>{crypto.trend === 'up' ? '▲' : '▼'}</span>
                           {crypto.change.toFixed(2)}%
                         </div>
                       </div>
                       <div style={{ 
-                        fontSize: 8, 
-                        color: '#9aa1aa',
-                        fontWeight: 500,
-                        textShadow: '0 0 3px rgba(0,0,0,0.8)'
+                        fontSize: 7, 
+                        color: '#5da9ff',
+                        fontWeight: 600,
+                        background: 'rgba(93,169,255,0.3)',
+                        padding: '2px 6px',
+                        borderRadius: 4,
+                        textShadow: '0 0 3px rgba(0,0,0,0.9)'
                       }}>
-                        USDT
+                        1m
                       </div>
                     </div>
                   </div>
