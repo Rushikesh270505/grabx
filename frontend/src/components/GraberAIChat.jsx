@@ -201,8 +201,23 @@ if len(candles) >= 26:
     let confidence = 0.8;
     let confidenceColor = 'GREEN';
 
+    // Convert to lowercase for better matching
+    const lowerInput = userInput.toLowerCase().trim();
+
+    // Handle greetings and simple interactions
+    if (lowerInput === 'hi' || lowerInput === 'hello' || lowerInput === 'ho' || lowerInput === 'hey') {
+      response = `Hello! I'm Graber AI, your autonomous trading strategy engineer. I'm here to help you create and optimize trading strategies.\n\n**What I can do:**\n• Generate complete Python trading strategies\n• Analyze and improve existing code\n• Explain trading concepts\n• Assess risk and viability\n\n**How to use:**\n1. Describe your strategy requirements (e.g., "Create an RSI strategy")\n2. Or paste your existing code for analysis\n3. Use the quick action buttons below\n\nReady to help! What trading strategy would you like to work on?`;
+      confidence = 1.0;
+      confidenceColor = 'GREEN';
+    }
+    // Handle questions about capabilities
+    else if (lowerInput.includes('what can you do') || lowerInput.includes('help') || lowerInput.includes('capabilities')) {
+      response = `**Graber AI Capabilities** 🚀\n\nI'm designed to be your complete trading strategy partner:\n\n📊 **Strategy Generation:**\n• RSI Mean Reversion\n• EMA Crossover\n• MACD Signals\n• Bollinger Bands\n• Custom strategies based on your requirements\n\n🔍 **Code Analysis:**\n• Syntax validation\n• Logic review\n• Performance optimization\n• Risk assessment\n\n🤖 **Agent Mode:**\n• Automatic code modification\n• Real-time strategy updates\n• Seamless editor integration\n\n💡 **Just tell me what you need!**\n"Generate an RSI strategy" or "Analyze this code..."`;
+      confidence = 1.0;
+      confidenceColor = 'GREEN';
+    }
     // Check if user is providing code to analyze
-    if (userInput.includes('signals.append') || userInput.includes('def ') || userInput.includes('if ')) {
+    else if (userInput.includes('signals.append') || userInput.includes('def ') || userInput.includes('if ')) {
       // Code analysis mode
       const analysis = await analyzeCode(userInput);
       
@@ -228,7 +243,9 @@ if len(candles) >= 26:
       
       confidence = analysis.confidence;
       confidenceColor = analysis.confidenceColor;
-    } else {
+    }
+    // Strategy generation mode
+    else if (lowerInput.includes('strategy') || lowerInput.includes('generate') || lowerInput.includes('create') || lowerInput.includes('build') || lowerInput.includes('rsi') || lowerInput.includes('ema') || lowerInput.includes('macd') || lowerInput.includes('bollinger')) {
       // Strategy generation mode
       generatedCode = await generateStrategy(userInput);
       
@@ -236,6 +253,12 @@ if len(candles) >= 26:
       
       confidence = 0.9;
       confidenceColor = 'GREEN';
+    }
+    // Default response for unrecognized input
+    else {
+      response = `I'm here to help with trading strategies! Could you please clarify what you'd like:\n\n**Examples:**\n• "Generate an RSI strategy"\n• "Create an EMA crossover"\n• "Analyze this code: [paste code]"\n• "Help me understand MACD"\n\nOr use the quick action buttons below for common strategies. I'm ready to assist! 🚀`;
+      confidence = 0.7;
+      confidenceColor = 'YELLOW';
     }
 
     const assistantMessage = {
