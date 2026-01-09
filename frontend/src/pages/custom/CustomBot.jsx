@@ -30,14 +30,20 @@ const COIN_POOL = [
   { pair: 'ICPUSDT', basePrice: 13.50, volatility: 0.09 }
 ];
 
-function generateSparkline(trend, points = 20) {
+function generateSparkline(trend, points = 60) {
+  // 60 points for 1-minute timeframe (1 point per second)
   const sparklinePoints = [];
   const baseY = trend === 'up' ? 25 : 5;
   const direction = trend === 'up' ? -1 : 1;
   
   for (let i = 0; i < points; i++) {
-    const randomVariation = Math.random() * 3;
-    const y = baseY + (direction * i * 0.8) + (Math.random() * 4 - 2);
+    // Simulate 1-minute price movement with realistic volatility
+    const timeProgress = i / points;
+    const trendMovement = direction * timeProgress * 15; // Overall trend
+    const volatility = (Math.random() - 0.5) * 8; // Random volatility
+    const microFluctuation = Math.sin(i * 0.3) * 2; // Small fluctuations
+    
+    const y = baseY + trendMovement + volatility + microFluctuation;
     sparklinePoints.push(`${i},${Math.max(2, Math.min(28, y))}`);
   }
   
@@ -58,16 +64,18 @@ export default function CustomBot() {
     const getRandomCoins = () => {
       const shuffled = [...COIN_POOL].sort(() => Math.random() - 0.5);
       return shuffled.slice(0, 9).map(coin => {
-        const randomMultiplier = 0.95 + Math.random() * 0.1; // ±5% variation
+        // Simulate 1-minute price movement
+        const randomMultiplier = 0.998 + Math.random() * 0.004; // ±0.2% variation for 1 minute
         const currentPrice = coin.basePrice * randomMultiplier;
-        const change = (Math.random() - 0.5) * 10; // -5% to +5%
+        const change = (Math.random() - 0.5) * 0.8; // ±0.4% for 1-minute timeframe
         const trend = change > 0 ? 'up' : 'down';
         
         return {
           ...coin,
           price: currentPrice,
           change: Math.abs(change),
-          trend
+          trend,
+          timeframe: '1m'
         };
       });
     };
@@ -235,6 +243,14 @@ export default function CustomBot() {
                       pointerEvents: 'none'
                     }}>
                       <div style={{ fontWeight: 600, color: '#ffffff', fontSize: 8, textShadow: '0 0 4px rgba(0,0,0,0.8)' }}>{crypto.pair}</div>
+                      <div style={{ 
+                        fontSize: 7, 
+                        color: '#5da9ff',
+                        fontWeight: 600,
+                        textShadow: '0 0 4px rgba(0,0,0,0.8)'
+                      }}>
+                        1m
+                      </div>
                       <div style={{ 
                         fontSize: 8, 
                         color: '#ffffff',
