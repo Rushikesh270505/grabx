@@ -2093,60 +2093,195 @@ Would you like me to try a different approach or explain the validation issues?`
              lowerInput.includes('two sum') || lowerInput.includes('palindrome') ||
              lowerInput.includes('give me code') || lowerInput.includes('write code')) {
       
-      generatedCode = await generateOptimizedCodingSolution(userInput);
-      
-      // Validate coding solution
-      const codeValidation = validateCodingSolutionAccuracy(generatedCode, userInput);
-      
-      if (codeValidation.isValid) {
-        let problemType = 'Algorithm';
-        let problemDescription = '';
-        let complexity = 'Varies';
-        let platform = 'LeetCode/CodeChef';
+      // Check if user mentioned CodeChef specifically without problem details
+      if (lowerInput.includes('codechef') && !lowerInput.includes('specific') && !lowerInput.includes('problem name') && !lowerInput.includes('solve this')) {
+        generatedCode = `# CodeChef Problem Solver Template
+# Ready to solve any CodeChef problem with optimal solutions
+
+def solve_codechef_problem():
+    """
+    Template for solving CodeChef problems efficiently.
+    Follow CodeChef best practices for competitive programming.
+    """
+    import sys
+    from typing import List, Tuple
+    
+    def fast_input():
+        """Fast input for competitive programming."""
+        return sys.stdin.readline().strip()
+    
+    def solve():
+        """Main solve function - customize based on problem."""
+        # Read input
+        t = int(fast_input())  # Number of test cases
         
-        if (lowerInput.includes('array')) {
-          problemType = 'Array Manipulation';
-          problemDescription = 'Efficient array operations and algorithms';
-          complexity = 'O(n) to O(n log n)';
-        } else if (lowerInput.includes('string')) {
-          problemType = 'String Processing';
-          problemDescription = 'String manipulation and pattern matching';
-          complexity = 'O(n) to O(n²)';
-        } else if (lowerInput.includes('tree')) {
-          problemType = 'Tree Algorithms';
-          problemDescription = 'Binary tree operations and traversals';
-          complexity = 'O(n) to O(n log n)';
-        } else if (lowerInput.includes('graph')) {
-          problemType = 'Graph Algorithms';
-          problemDescription = 'Graph traversal and shortest path algorithms';
-          complexity = 'O(V + E) to O((V + E) log V)';
-        } else if (lowerInput.includes('dynamic programming') || lowerInput.includes('dp')) {
-          problemType = 'Dynamic Programming';
-          problemDescription = 'Optimization problems with overlapping subproblems';
-          complexity = 'O(n²) to O(n³)';
-        } else if (lowerInput.includes('sorting')) {
-          problemType = 'Sorting Algorithms';
-          problemDescription = 'Various sorting techniques and implementations';
-          complexity = 'O(n log n) average';
-        } else if (lowerInput.includes('binary search')) {
-          problemType = 'Binary Search';
-          problemDescription = 'Efficient search in sorted arrays';
-          complexity = 'O(log n)';
-        } else if (lowerInput.includes('linked list')) {
-          problemType = 'Linked List Operations';
-          problemDescription = 'Singly and doubly linked list algorithms';
-          complexity = 'O(n)';
-        } else if (lowerInput.includes('stack')) {
-          problemType = 'Stack Applications';
-          problemDescription = 'LIFO data structure and problem-solving';
-          complexity = 'O(n)';
-        } else if (lowerInput.includes('code') || lowerInput.includes('problem')) {
-          problemType = 'General Coding Problem';
-          problemDescription = 'Optimized solution with multiple approaches';
-          complexity = 'Optimized for efficiency';
-        }
+        for _ in range(t):
+            # Read problem-specific input
+            # Example: n = int(fast_input())
+            # Example: arr = list(map(int, fast_input().split()))
+            
+            # Your solution logic here
+            result = process_test_case()
+            
+            # Output result
+            print(result)
+    
+    def process_test_case():
+        """Process individual test case."""
+        # Implement your algorithm here
+        return "Solution"
+    
+    # Run the solver
+    if __name__ == "__main__":
+        solve()
+
+# Example CodeChef Problems Solutions:
+
+# 1. Two Sum (START01 - Life, the Universe, and Everything)
+def solve_start01():
+    """Solve START01 - Basic input output."""
+    import sys
+    data = sys.stdin.read().split()
+    for num in data:
+        if int(num) == 42:
+            break
+        print(num)
+
+# 2. Add Two Numbers (TEST - Life, the Universe, and Everything)
+def solve_test():
+    """Solve TEST - Basic input output until 42."""
+    import sys
+    for line in sys.stdin:
+        n = int(line.strip())
+        if n == 42:
+            break
+        print(n)
+
+# 3. Chef and Divisor Tree (DIVPROBLEM)
+def solve_divproblem():
+    """Solve DIVPROBLEM - Find divisors and sum."""
+    import sys
+    import math
+    
+    def get_divisors(n):
+        """Get all divisors of n."""
+        divisors = set()
+        for i in range(1, int(math.sqrt(n)) + 1):
+            if n % i == 0:
+                divisors.add(i)
+                divisors.add(n // i)
+        return sorted(divisors)
+    
+    t = int(sys.stdin.readline())
+    for _ in range(t):
+        n = int(sys.stdin.readline())
+        divisors = get_divisors(n)
+        print(sum(divisors))
+
+# Choose the appropriate problem solver
+if __name__ == "__main__":
+    # Uncomment the problem you want to solve:
+    # solve_start01()
+    # solve_test()
+    # solve_divproblem()
+    pass`;
         
-        response = `🧠 **${problemType} Solution Generated Successfully**
+        response = `🎯 **CodeChef Problem Solver Ready!**
+
+**📋 Please Specify the Problem:**
+I can solve any CodeChef problem, but I need to know which specific problem you want me to solve.
+
+**💡 Common CodeChef Problems I Can Solve:**
+• **START01** - Life, the Universe, and Everything
+• **TEST** - Basic input/output practice
+• **DIVPROBLEM** - Chef and Divisor Tree
+• **FLOW001** - Add Two Numbers
+• **HS08TEST** - ATM Problem
+• **FLOW007** - Reverse Number
+• **FLOW008** - What is the profit?
+• **FLOW009** - Sum of Digits
+• **FLOW010** - Factorial
+• **FLOW016** - Reverse The Number
+
+**🔧 How to Request:**
+• "Solve CodeChef problem START01"
+• "Give me code for CodeChef FLOW001"
+• "Help with CodeChef ATM problem"
+• "Solve this CodeChef problem: [problem name]"
+
+**📊 What I Provide:**
+• **Optimized Solutions** with proper time complexity
+• **Multiple Approaches** for different constraints
+• **Test Cases** for validation
+• **Competitive Programming Best Practices**
+• **Fast Input/Output** handling
+• **Memory Optimization** techniques
+
+**🚀 Ready to Solve:**
+Just tell me the specific CodeChef problem name or provide the problem statement, and I'll generate the perfect solution!
+
+${agentMode ? '🤖 **Agent Mode:** Solution will be automatically applied!' : '📝 **Next Steps:** Use "Insert to Editor" or enable Agent Mode for automatic deployment.'}
+
+💡 **Pro Tip:** Include the problem name or constraints for the most accurate solution!`;
+        
+        confidence = 0.95;
+        confidenceColor = 'GREEN';
+      } else {
+        // Handle specific coding problems
+        generatedCode = await generateOptimizedCodingSolution(userInput);
+        
+        // Validate coding solution
+        const codeValidation = validateCodingSolutionAccuracy(generatedCode, userInput);
+        
+        if (codeValidation.isValid) {
+          let problemType = 'Algorithm';
+          let problemDescription = '';
+          let complexity = 'Varies';
+          let platform = 'LeetCode/CodeChef';
+          
+          if (lowerInput.includes('array')) {
+            problemType = 'Array Manipulation';
+            problemDescription = 'Efficient array operations and algorithms';
+            complexity = 'O(n) to O(n log n)';
+          } else if (lowerInput.includes('string')) {
+            problemType = 'String Processing';
+            problemDescription = 'String manipulation and pattern matching';
+            complexity = 'O(n) to O(n²)';
+          } else if (lowerInput.includes('tree')) {
+            problemType = 'Tree Algorithms';
+            problemDescription = 'Binary tree operations and traversals';
+            complexity = 'O(n) to O(n log n)';
+          } else if (lowerInput.includes('graph')) {
+            problemType = 'Graph Algorithms';
+            problemDescription = 'Graph traversal and shortest path algorithms';
+            complexity = 'O(V + E) to O((V + E) log V)';
+          } else if (lowerInput.includes('dynamic programming') || lowerInput.includes('dp')) {
+            problemType = 'Dynamic Programming';
+            problemDescription = 'Optimization problems with overlapping subproblems';
+            complexity = 'O(n²) to O(n³)';
+          } else if (lowerInput.includes('sorting')) {
+            problemType = 'Sorting Algorithms';
+            problemDescription = 'Various sorting techniques and implementations';
+            complexity = 'O(n log n) average';
+          } else if (lowerInput.includes('binary search')) {
+            problemType = 'Binary Search';
+            problemDescription = 'Efficient search in sorted arrays';
+            complexity = 'O(log n)';
+          } else if (lowerInput.includes('linked list')) {
+            problemType = 'Linked List Operations';
+            problemDescription = 'Singly and doubly linked list algorithms';
+            complexity = 'O(n)';
+          } else if (lowerInput.includes('stack')) {
+            problemType = 'Stack Applications';
+            problemDescription = 'LIFO data structure and problem-solving';
+            complexity = 'O(n)';
+          } else if (lowerInput.includes('code') || lowerInput.includes('problem')) {
+            problemType = 'General Coding Problem';
+            problemDescription = 'Optimized solution with multiple approaches';
+            complexity = 'Optimized for efficiency';
+          }
+          
+          response = `🧠 **${problemType} Solution Generated Successfully**
 
 **📋 Problem Analysis:**
 • **Type:** ${problemType}
@@ -2181,12 +2316,12 @@ Would you like me to try a different approach or explain the validation issues?`
 ${agentMode ? '🤖 **Agent Mode:** Solution automatically applied to editor!' : '📝 **Next Steps:** Use "Insert to Editor" or enable Agent Mode for automatic deployment.'}
 
 💡 **Pro Tip:** Study the solution carefully to understand the underlying patterns and apply them to similar problems!`;
-        
-        confidence = 0.98;
-        confidenceColor = 'GREEN';
-      } else {
-        // Handle coding validation failure
-        response = `🚨 **Coding Solution Issue Detected**
+          
+          confidence = 0.98;
+          confidenceColor = 'GREEN';
+        } else {
+          // Handle coding validation failure
+          response = `🚨 **Coding Solution Issue Detected**
 
 **❌ Validation Problems:**
 ${codeValidation.issues.map(issue => `• ${issue}`).join('\n')}
@@ -2202,9 +2337,10 @@ ${codeValidation.recommendations.map(rec => `• ${rec}`).join('\n')}
 
 **🔄 Retry System:**
 I can attempt up to 3 different approaches to solve your problem. Would you like me to try an alternative method?`;
-        
-        confidence = 0.6;
-        confidenceColor = 'YELLOW';
+          
+          confidence = 0.6;
+          confidenceColor = 'YELLOW';
+        }
       }
     }
 
