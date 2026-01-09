@@ -5,6 +5,11 @@ import GraberAIChat from '../../components/GraberAIChat';
 import { executePythonCode } from '../../services/pythonExecutor';
 
 // Default Python trading bot template
+const DEFAULT_PYTHON_CODE = `# Simple trading bot example
+if current_price > 50000:
+    signals.append({'side': 'sell', 'price': current_price, 'reason': 'Price above 50000'})
+elif current_price < 40000:
+    signals.append({'side': 'buy', 'price': current_price, 'reason': 'Price below 40000'})`;
 
 // Dynamic coin pool for rotation
 const COIN_POOL = [
