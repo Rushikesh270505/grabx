@@ -59,7 +59,9 @@ export default function CustomBot() {
   const [events, setEvents] = useState([]);
   const [executionError, setExecutionError] = useState(null);
   const [displayCoins, setDisplayCoins] = useState([]);
+  const [chatHeight, setChatHeight] = useState(450);
   const intervalRef = useRef(null);
+  const isResizingRef = useRef(false);
 
   // Rotate displayed coins one by one every 15 seconds
   useEffect(() => {
@@ -132,6 +134,44 @@ export default function CustomBot() {
 
   const priceRef = useRef(null);
   const lastExecutionRef = useRef(0);
+
+  // Resize handlers
+  const handleMouseDown = (e) => {
+    isResizingRef.current = true;
+    e.preventDefault();
+    document.body.style.cursor = 'ns-resize';
+    document.body.style.userSelect = 'none';
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isResizingRef.current) return;
+    
+    const rightSideContainer = document.querySelector('[data-resizable-container]');
+    if (!rightSideContainer) return;
+    
+    const rect = rightSideContainer.getBoundingClientRect();
+    const newHeight = e.clientY - rect.top;
+    
+    if (newHeight >= 200 && newHeight <= 600) {
+      setChatHeight(newHeight);
+    }
+  };
+
+  const handleMouseUp = () => {
+    isResizingRef.current = false;
+    document.body.style.cursor = 'default';
+    document.body.style.userSelect = 'auto';
+  };
+
+  useEffect(() => {
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
 
   useEffect(() => {
     // Clear execution error when code changes
@@ -485,10 +525,10 @@ export default function CustomBot() {
         </div>
 
         {/* Right Side: AI Chat and Editor */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }} data-resizable-container>
           
           {/* Graber AI Chat */}
-          <div style={{ height: 450 }}>
+          <div style={{ height: chatHeight }}>
             <GraberAIChat 
               onCodeGenerated={(generatedCode) => {
                 setCode(generatedCode);
@@ -497,6 +537,40 @@ export default function CustomBot() {
               onCodeModified={(modifiedCode) => {
                 setCode(modifiedCode);
                 setExecutionError(null);
+              }}
+            />
+          </div>
+
+          {/* Partition Adjuster */}
+          <div 
+            style={{
+              height: '4px',
+              background: 'rgba(93, 169, 255, 0.3)',
+              cursor: 'ns-resize',
+              borderRadius: '2px',
+              margin: '0 20px',
+              position: 'relative',
+              transition: 'background 0.2s ease'
+            }}
+            onMouseDown={handleMouseDown}
+            onMouseEnter={(e) => {
+              e.target.style.background = 'rgba(93, 169, 255, 0.6)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = 'rgba(93, 169, 255, 0.3)';
+            }}
+            title="Drag to resize panels"
+          >
+            <div 
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '20px',
+                height: '2px',
+                background: 'rgba(255, 255, 255, 0.8)',
+                borderRadius: '1px'
               }}
             />
           </div>
