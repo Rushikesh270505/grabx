@@ -152,8 +152,10 @@ export default function CustomBot() {
     const rect = rightSideContainer.getBoundingClientRect();
     const newHeight = e.clientY - rect.top;
     
-    if (newHeight >= 200 && newHeight <= 600) {
+    // Remove height restrictions for smoother dragging
+    if (newHeight >= 100 && newHeight <= 800) {
       setChatHeight(newHeight);
+      e.preventDefault(); // Prevent default browser behavior
     }
   };
 
@@ -544,20 +546,24 @@ export default function CustomBot() {
           {/* Partition Adjuster */}
           <div 
             style={{
-              height: '4px',
-              background: 'rgba(93, 169, 255, 0.3)',
+              height: '12px',
+              background: 'linear-gradient(90deg, rgba(93, 169, 255, 0.6) 0%, rgba(93, 169, 255, 0.4) 100%)',
               cursor: 'ns-resize',
-              borderRadius: '2px',
-              margin: '0 20px',
+              borderRadius: '6px',
+              margin: '8px 20px',
               position: 'relative',
-              transition: 'background 0.2s ease'
+              transition: 'all 0.3s ease',
+              border: '2px solid rgba(93, 169, 255, 0.4)',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
             }}
             onMouseDown={handleMouseDown}
             onMouseEnter={(e) => {
-              e.target.style.background = 'rgba(93, 169, 255, 0.6)';
+              e.target.style.background = 'linear-gradient(90deg, rgba(93, 169, 255, 0.8) 0%, rgba(93, 169, 255, 0.6) 100%)';
+              e.target.style.transform = 'scaleY(1.2)';
             }}
             onMouseLeave={(e) => {
-              e.target.style.background = 'rgba(93, 169, 255, 0.3)';
+              e.target.style.background = 'linear-gradient(90deg, rgba(93, 169, 255, 0.6) 0%, rgba(93, 169, 255, 0.4) 100%)';
+              e.target.style.transform = 'scaleY(1)';
             }}
             title="Drag to resize panels"
           >
@@ -567,12 +573,27 @@ export default function CustomBot() {
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
-                width: '20px',
-                height: '2px',
-                background: 'rgba(255, 255, 255, 0.8)',
-                borderRadius: '1px'
+                width: '60px',
+                height: '4px',
+                background: 'rgba(255, 255, 255, 0.9)',
+                borderRadius: '2px',
+                boxShadow: '0 0 4px rgba(0, 0, 0, 0.3)'
               }}
             />
+            <div 
+              style={{
+                position: 'absolute',
+                top: '2px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                fontSize: '10px',
+                color: 'rgba(255, 255, 255, 0.8)',
+                fontWeight: '600',
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)'
+              }}
+            >
+              ⋮⋮
+            </div>
           </div>
 
           {/* Code Editor */}
