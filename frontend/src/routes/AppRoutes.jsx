@@ -4,6 +4,7 @@ import Home from "../pages/marketing/Home";
 import Bots from "../pages/bots/Bots";
 import BotDetail from "../pages/bots/BotDetail";
 import CustomBot from "../pages/custom/CustomBot";
+import Backtesting from "../pages/backtesting/Backtesting";
 import Dashboard from "../pages/dashboard/Dashboard";
 import Analytics from "../pages/dashboard/Analytics";
 import Settings from "../pages/dashboard/Settings";
@@ -16,6 +17,7 @@ export default function AppRoutes() {
   <Route path="/bots" element={<Bots />} />
   <Route path="/bots/:id" element={<BotDetail />} />
   <Route path="/custom-bot" element={<CustomBot />} />
+      <Route path="/backtesting" element={<Backtesting />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/analytics" element={<Analytics />} />
       <Route path="/settings" element={<Settings />} />
