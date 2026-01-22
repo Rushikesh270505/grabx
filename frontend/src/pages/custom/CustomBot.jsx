@@ -872,6 +872,25 @@ export default function CustomBot() {
               >
                 🗑️ Clear Signals
               </button>
+              <button
+                onClick={() => {
+                  // Open backtesting page (we'll implement this later)
+                  window.open('/backtesting', '_blank');
+                }}
+                style={{
+                  padding: '12px 24px',
+                  background: 'rgba(93, 169, 255, 0.2)',
+                  border: '1px solid rgba(93, 169, 255, 0.3)',
+                  borderRadius: 10,
+                  color: '#5da9ff',
+                  cursor: 'pointer',
+                  fontSize: 16,
+                  fontWeight: 600,
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                📈 Run Backtesting
+              </button>
             </div>
           </div>
 
