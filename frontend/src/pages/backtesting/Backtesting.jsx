@@ -19,8 +19,10 @@ export default function Backtesting() {
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState(null);
   const [chartData, setChartData] = useState([]);
+  const [dailyPnL, setDailyPnL] = useState([]);
+  const [monthlyPnL, setMonthlyPnL] = useState([]);
 
-  // Generate mock chart data for the selected period
+  // Generate mock chart data for selected period
   useEffect(() => {
     const generateChartData = () => {
       const data = [];
@@ -29,6 +31,8 @@ export default function Backtesting() {
       const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
       
       let currentPrice = 60000; // Base price for BTC
+      const dailyData = [];
+      const monthlyData = {};
       
       for (let i = 0; i < daysDiff; i++) {
         const date = new Date(start);
@@ -39,17 +43,50 @@ export default function Backtesting() {
         const trend = Math.sin(i * 0.1) * currentPrice * 0.02;
         const price = currentPrice + volatility + trend;
         
+        // Generate daily P&L
+        const dailyPL = (Math.random() - 0.5) * 500; // Random daily P&L between -$250 and +$250
+        
         data.push({
           date: date.toISOString().split('T')[0],
           timestamp: date.getTime(),
           price: price,
-          volume: Math.random() * 1000000 + 500000
+          volume: Math.random() * 1000000 + 500000,
+          dailyPL: dailyPL
+        });
+        
+        // Store daily P&L
+        dailyData.push({
+          date: date.toISOString().split('T')[0],
+          day: date.getDate(),
+          month: date.getMonth(),
+          year: date.getFullYear(),
+          pnl: dailyPL,
+          cumulativePnL: dailyData.reduce((sum, d) => sum + d.pnl, 0) + dailyPL
+        });
+        
+        // Store monthly P&L
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        if (!monthlyData[monthKey]) {
+          monthlyData[monthKey] = {
+            month: date.getMonth(),
+            year: date.getFullYear(),
+            monthName: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+            pnl: 0,
+            days: []
+          };
+        }
+        monthlyData[monthKey].pnl += dailyPL;
+        monthlyData[monthKey].days.push({
+          day: date.getDate(),
+          pnl: dailyPL
         });
         
         currentPrice = price;
       }
       
       setChartData(data);
+      setDailyPnL(dailyData);
+      setMonthlyPnL(Object.values(monthlyData));
     };
 
     generateChartData();
@@ -356,6 +393,181 @@ export default function Backtesting() {
               </div>
             </div>
           )}
+
+          {/* Calendar P&L Section */}
+          <div className="glass-panel" style={{ 
+            padding: 20,
+            background: 'rgba(0, 0, 0, 0.8)',
+            border: '1px solid rgba(93, 169, 255, 0.3)'
+          }}>
+            <h3 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 20 }}>
+              📅 Calendar P&L Analysis
+            </h3>
+            
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: monthlyPnL.length <= 12 ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+              gap: 16,
+              marginBottom: 20
+            }}>
+              {Array.from({ length: monthlyPnL.length <= 12 ? 12 : 18 }).map((_, index) => {
+                const monthData = monthlyPnL[index];
+                const isEmpty = !monthData;
+                
+                return (
+                  <div 
+                    key={index} 
+                    style={{ 
+                      padding: 16,
+                      background: isEmpty ? 'rgba(255, 255, 255, 0.02)' : 'rgba(93, 169, 255, 0.1)',
+                      border: isEmpty ? '1px dashed rgba(255, 255, 255, 0.1)' : '1px solid rgba(93, 169, 255, 0.3)',
+                      borderRadius: 12,
+                      minHeight: 200,
+                      opacity: isEmpty ? 0.5 : 1
+                    }}
+                  >
+                    {isEmpty ? (
+                      <div style={{ 
+                        textAlign: 'center', 
+                        color: '#666', 
+                        fontSize: 14,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: '100%'
+                      }}>
+                        <div>
+                          <div style={{ fontSize: 24, marginBottom: 8 }}>📅</div>
+                          <div>Empty</div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div style={{ 
+                          fontSize: 16, 
+                          fontWeight: 'bold', 
+                          color: '#5da9ff', 
+                          marginBottom: 12,
+                          textAlign: 'center'
+                        }}>
+                          {monthData.monthName}
+                        </div>
+                        
+                        <div style={{ 
+                          fontSize: 24, 
+                          fontWeight: 'bold', 
+                          color: monthData.pnl >= 0 ? '#7ef0a2' : '#ff6b6b',
+                          marginBottom: 16,
+                          textAlign: 'center'
+                        }}>
+                          {monthData.pnl >= 0 ? '+' : ''}${monthData.pnl.toFixed(2)}
+                        </div>
+                        
+                        <div style={{ 
+                          fontSize: 12, 
+                          color: '#9aa1aa', 
+                          marginBottom: 12,
+                          textAlign: 'center'
+                        }}>
+                          Total Days: {monthData.days.length}
+                        </div>
+                        
+                        <div style={{ 
+                          display: 'grid', 
+                          gridTemplateColumns: 'repeat(7, 1fr)', 
+                          gap: 2,
+                          fontSize: 10,
+                          color: '#9aa1aa'
+                        }}>
+                          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                            <div key={i} style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                              {day}
+                            </div>
+                          ))}
+                          
+                          {/* Calendar days */}
+                          {Array.from({ length: 35 }).map((_, dayIndex) => {
+                            const dayData = monthData.days.find(d => d.day === dayIndex + 1);
+                            const hasData = dayData !== undefined;
+                            
+                            return (
+                              <div
+                                key={dayIndex}
+                                style={{
+                                  textAlign: 'center',
+                                  padding: '4px 2px',
+                                  borderRadius: 4,
+                                  background: hasData ? (
+                                    dayData.pnl >= 0 ? 'rgba(126, 240, 162, 0.2)' : 'rgba(255, 107, 107, 0.2)'
+                                  ) : 'transparent',
+                                  color: hasData ? (
+                                    dayData.pnl >= 0 ? '#7ef0a2' : '#ff6b6b'
+                                  ) : '#666',
+                                  fontSize: 11,
+                                  fontWeight: hasData ? 'bold' : 'normal',
+                                  border: hasData ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'
+                                }}
+                                title={hasData ? `P&L: $${dayData.pnl.toFixed(2)}` : 'No data'}
+                              >
+                                {dayIndex < monthData.days.length ? dayIndex + 1 : ''}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* Summary Stats */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(3, 1fr)', 
+              gap: 16,
+              padding: 16,
+              background: 'rgba(93, 169, 255, 0.05)',
+              borderRadius: 8
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 14, color: '#9aa1aa', marginBottom: 4 }}>
+                  Total Period P&L
+                </div>
+                <div style={{ 
+                  fontSize: 20, 
+                  fontWeight: 'bold', 
+                  color: monthlyPnL.reduce((sum, m) => sum + m.pnl, 0) >= 0 ? '#7ef0a2' : '#ff6b6b' 
+                }}>
+                  ${monthlyPnL.reduce((sum, m) => sum + m.pnl, 0).toFixed(2)}
+                </div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 14, color: '#9aa1aa', marginBottom: 4 }}>
+                  Average Monthly P&L
+                </div>
+                <div style={{ 
+                  fontSize: 20, 
+                  fontWeight: 'bold', 
+                  color: '#5da9ff' 
+                }}>
+                  ${(monthlyPnL.reduce((sum, m) => sum + m.pnl, 0) / monthlyPnL.length).toFixed(2)}
+                </div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 14, color: '#9aa1aa', marginBottom: 4 }}>
+                  Profitable Months
+                </div>
+                <div style={{ 
+                  fontSize: 20, 
+                  fontWeight: 'bold', 
+                  color: '#5da9ff' 
+                }}>
+                  {monthlyPnL.filter(m => m.pnl >= 0).length}/{monthlyPnL.length}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Right Side: Chart */}
