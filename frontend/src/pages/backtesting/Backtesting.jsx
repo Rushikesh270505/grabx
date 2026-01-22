@@ -493,7 +493,7 @@ export default function Backtesting() {
       {/* Navigation */}
       <div style={{ position: 'fixed', bottom: 24, right: 24 }}>
         <button
-          onClick={() => navigate('/custom-bot', { state: { symbol })}
+          onClick={() => navigate('/custom-bot', { state: { symbol: symbol } })}
           style={{
             padding: '12px 24px',
             background: 'rgba(93, 169, 255, 0.2)',
