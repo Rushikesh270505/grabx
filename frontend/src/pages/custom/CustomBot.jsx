@@ -62,6 +62,16 @@ export default function CustomBot() {
   const [chatHeight, setChatHeight] = useState(450);
   const intervalRef = useRef(null);
   const isResizingRef = useRef(false);
+  
+  // Backtesting state
+  const [isBacktesting, setIsBacktesting] = useState(false);
+  const [backtestResults, setBacktestResults] = useState(null);
+  const [backtestConfig, setBacktestConfig] = useState({
+    startDate: '2024-01-01',
+    endDate: '2024-01-31',
+    initialCapital: 10000,
+    commission: 0.001
+  });
 
   // Rotate displayed coins one by one every 15 seconds
   useEffect(() => {
@@ -174,6 +184,176 @@ export default function CustomBot() {
       document.removeEventListener('mouseup', handleMouseUp);
     };
   }, []);
+
+  // Backtesting function
+  const runBacktest = async () => {
+    setIsBacktesting(true);
+    setBacktestResults(null);
+    
+    try {
+      // Generate mock historical data for the selected period
+      const mockHistoricalData = generateMockHistoricalData(
+        symbol, 
+        backtestConfig.startDate, 
+        backtestConfig.endDate
+      );
+      
+      // Simulate backtesting execution
+      const results = await simulateBacktestExecution(
+        code, 
+        mockHistoricalData, 
+        backtestConfig
+      );
+      
+      setBacktestResults(results);
+    } catch (error) {
+      console.error('Backtest error:', error);
+      setBacktestResults({
+        error: error.message,
+        totalTrades: 0,
+        profitLoss: 0,
+        winRate: 0
+      });
+    } finally {
+      setIsBacktesting(false);
+    }
+  };
+
+  // Generate mock historical data
+  const generateMockHistoricalData = (symbol, startDate, endDate) => {
+    const data = [];
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    
+    let currentPrice = COIN_POOL.find(coin => coin.pair === symbol)?.basePrice || 50000;
+    
+    for (let i = 0; i < daysDiff; i++) {
+      const date = new Date(start);
+      date.setDate(date.getDate() + i);
+      
+      // Generate hourly prices for each day
+      for (let hour = 0; hour < 24; hour++) {
+        const volatility = (Math.random() - 0.5) * currentPrice * 0.02;
+        const trend = Math.sin(i * 0.1) * currentPrice * 0.01;
+        const price = currentPrice + volatility + trend;
+        
+        data.push({
+          timestamp: new Date(date.getTime() + hour * 60 * 60 * 1000),
+          price: price,
+          volume: Math.random() * 1000000 + 500000
+        });
+        
+        currentPrice = price;
+      }
+    }
+    
+    return data;
+  };
+
+  // Simulate backtest execution
+  const simulateBacktestExecution = async (code, historicalData, config) => {
+    const trades = [];
+    let balance = config.initialCapital;
+    let position = 0;
+    let maxBalance = balance;
+    let maxDrawdown = 0;
+    
+    // Simulate executing the trading strategy on historical data
+    for (let i = 0; i < historicalData.length; i += 60) { // Every hour
+      const currentPrice = historicalData[i].price;
+      const candles = historicalData.slice(Math.max(0, i - 100), i + 100);
+      
+      try {
+        // Create a simplified execution context
+        const mockContext = {
+          current_price: currentPrice,
+          balance: balance,
+          position: position,
+          trades: trades,
+          candles: candles.map(c => ({
+            open: c.price * (1 + (Math.random() - 0.5) * 0.001),
+            high: c.price * (1 + Math.random() * 0.002),
+            low: c.price * (1 - Math.random() * 0.002),
+            close: c.price,
+            volume: c.volume
+          }))
+        };
+        
+        // Simple rule parsing for demo
+        const signals = parseSimpleRules(code, currentPrice);
+        
+        // Execute trades based on signals
+        signals.forEach(signal => {
+          const tradeCost = signal.price * signal.quantity || signal.price * 0.1;
+          const commissionFee = tradeCost * config.commission;
+          
+          if (signal.side === 'buy' && balance >= tradeCost + commissionFee) {
+            const quantity = (tradeCost) / signal.price;
+            balance -= (tradeCost + commissionFee);
+            position += quantity;
+            
+            trades.push({
+              timestamp: historicalData[i].timestamp,
+              side: 'buy',
+              price: signal.price,
+              quantity: quantity,
+              balance: balance,
+              reason: signal.reason
+            });
+          } else if (signal.side === 'sell' && position > 0) {
+            const sellQuantity = Math.min(position, signal.quantity || 0.1);
+            const sellValue = sellQuantity * signal.price;
+            const commissionFee = sellValue * config.commission;
+            
+            balance += (sellValue - commissionFee);
+            position -= sellQuantity;
+            
+            trades.push({
+              timestamp: historicalData[i].timestamp,
+              side: 'sell',
+              price: signal.price,
+              quantity: sellQuantity,
+              balance: balance,
+              reason: signal.reason
+            });
+          }
+          
+          // Track performance metrics
+          maxBalance = Math.max(maxBalance, balance + position * currentPrice);
+          const currentDrawdown = (maxBalance - (balance + position * currentPrice)) / maxBalance;
+          maxDrawdown = Math.max(maxDrawdown, currentDrawdown);
+        });
+      } catch (error) {
+        console.error('Error in backtest execution:', error);
+      }
+    }
+    
+    // Calculate final results
+    const finalValue = balance + position * historicalData[historicalData.length - 1].price;
+    const totalProfitLoss = finalValue - config.initialCapital;
+    const profitLossPercentage = (totalProfitLoss / config.initialCapital) * 100;
+    
+    const winningTrades = trades.filter(t => {
+      const nextTrade = trades[trades.indexOf(t) + 1];
+      return nextTrade && ((t.side === 'buy' && nextTrade.price > t.price) || 
+                          (t.side === 'sell' && nextTrade.price < t.price));
+    });
+    
+    const winRate = trades.length > 0 ? (winningTrades.length / Math.floor(trades.length / 2)) * 100 : 0;
+    
+    return {
+      totalTrades: trades.length,
+      profitLoss: totalProfitLoss,
+      profitLossPercentage: profitLossPercentage,
+      winRate: winRate,
+      maxDrawdown: maxDrawdown * 100,
+      finalBalance: finalValue,
+      trades: trades.slice(-20), // Show last 20 trades
+      sharpeRatio: profitLossPercentage / (maxDrawdown * 100 || 1),
+      config: config
+    };
+  };
 
   useEffect(() => {
     // Clear execution error when code changes
@@ -693,6 +873,219 @@ export default function CustomBot() {
                 🗑️ Clear Signals
               </button>
             </div>
+          </div>
+
+          {/* Backtesting Section */}
+          <div className="glass-panel" style={{ padding: 20, marginTop: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 style={{ margin: 0, color: '#5da9ff', fontSize: 20 }}>📈 Backtesting</h3>
+              <button
+                onClick={runBacktest}
+                disabled={isBacktesting}
+                style={{
+                  padding: '10px 20px',
+                  background: isBacktesting ? '#ff6b6b' : '#5da9ff',
+                  border: 'none',
+                  borderRadius: 8,
+                  color: '#fff',
+                  fontWeight: 600,
+                  cursor: isBacktesting ? 'not-allowed' : 'pointer',
+                  fontSize: 14,
+                  transition: 'all 0.2s ease',
+                  opacity: isBacktesting ? 0.7 : 1
+                }}
+              >
+                {isBacktesting ? '⏳ Running...' : '🚀 Run Backtest'}
+              </button>
+            </div>
+
+            {/* Backtest Configuration */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 20 }}>
+              <div>
+                <label style={{ color: '#cfd3d8', fontSize: 14, fontWeight: 600, display: 'block', marginBottom: 8 }}>
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={backtestConfig.startDate}
+                  onChange={(e) => setBacktestConfig({...backtestConfig, startDate: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: 6,
+                    background: 'rgba(0,0,0,0.3)',
+                    border: '1px solid rgba(93,169,255,0.2)',
+                    color: '#fff',
+                    fontSize: 14
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ color: '#cfd3d8', fontSize: 14, fontWeight: 600, display: 'block', marginBottom: 8 }}>
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  value={backtestConfig.endDate}
+                  onChange={(e) => setBacktestConfig({...backtestConfig, endDate: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: 6,
+                    background: 'rgba(0,0,0,0.3)',
+                    border: '1px solid rgba(93,169,255,0.2)',
+                    color: '#fff',
+                    fontSize: 14
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ color: '#cfd3d8', fontSize: 14, fontWeight: 600, display: 'block', marginBottom: 8 }}>
+                  Initial Capital ($)
+                </label>
+                <input
+                  type="number"
+                  value={backtestConfig.initialCapital}
+                  onChange={(e) => setBacktestConfig({...backtestConfig, initialCapital: Number(e.target.value)})}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: 6,
+                    background: 'rgba(0,0,0,0.3)',
+                    border: '1px solid rgba(93,169,255,0.2)',
+                    color: '#fff',
+                    fontSize: 14
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Backtest Results */}
+            {backtestResults && (
+              <div style={{ 
+                padding: 16, 
+                background: 'rgba(93,169,255,0.1)', 
+                borderRadius: 12,
+                border: '1px solid rgba(93,169,255,0.2)'
+              }}>
+                <h4 style={{ margin: 0, marginBottom: 16, color: '#5da9ff', fontSize: 16, textAlign: 'center' }}>
+                  📊 Backtest Results
+                </h4>
+                
+                {backtestResults.error ? (
+                  <div style={{ 
+                    textAlign: 'center', 
+                    color: '#ff6b6b', 
+                    padding: 20,
+                    background: 'rgba(255,107,107,0.1)',
+                    borderRadius: 8
+                  }}>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>❌</div>
+                    <div style={{ fontSize: 14, fontWeight: 600 }}>Backtest Error</div>
+                    <div style={{ fontSize: 12, marginTop: 4 }}>{backtestResults.error}</div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 16, marginBottom: 20 }}>
+                    <div style={{ textAlign: 'center', padding: 12, background: 'rgba(0,0,0,0.2)', borderRadius: 8 }}>
+                      <div style={{ fontSize: 24, fontWeight: 'bold', color: '#5da9ff', marginBottom: 4 }}>
+                        ${backtestResults.finalBalance?.toFixed(2) || '0.00'}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#9aa1aa' }}>Final Balance</div>
+                    </div>
+                    <div style={{ textAlign: 'center', padding: 12, background: 'rgba(0,0,0,0.2)', borderRadius: 8 }}>
+                      <div style={{ 
+                        fontSize: 24, 
+                        fontWeight: 'bold', 
+                        color: backtestResults.profitLoss >= 0 ? '#7ef0a2' : '#ff6b6b', 
+                        marginBottom: 4 
+                      }}>
+                        {backtestResults.profitLoss >= 0 ? '+' : ''}{backtestResults.profitLoss?.toFixed(2) || '0.00'}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#9aa1aa' }}>Profit/Loss</div>
+                    </div>
+                    <div style={{ textAlign: 'center', padding: 12, background: 'rgba(0,0,0,0.2)', borderRadius: 8 }}>
+                      <div style={{ fontSize: 24, fontWeight: 'bold', color: '#5da9ff', marginBottom: 4 }}>
+                        {backtestResults.profitLossPercentage?.toFixed(2) || '0.00'}%
+                      </div>
+                      <div style={{ fontSize: 12, color: '#9aa1aa' }}>Return %</div>
+                    </div>
+                    <div style={{ textAlign: 'center', padding: 12, background: 'rgba(0,0,0,0.2)', borderRadius: 8 }}>
+                      <div style={{ fontSize: 24, fontWeight: 'bold', color: '#5da9ff', marginBottom: 4 }}>
+                        {backtestResults.winRate?.toFixed(1) || '0.0'}%
+                      </div>
+                      <div style={{ fontSize: 12, color: '#9aa1aa' }}>Win Rate</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Additional Metrics */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 16 }}>
+                  <div style={{ textAlign: 'center', padding: 12, background: 'rgba(0,0,0,0.2)', borderRadius: 8 }}>
+                    <div style={{ fontSize: 20, fontWeight: 'bold', color: '#5da9ff', marginBottom: 4 }}>
+                      {backtestResults.totalTrades || 0}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#9aa1aa' }}>Total Trades</div>
+                  </div>
+                  <div style={{ textAlign: 'center', padding: 12, background: 'rgba(0,0,0,0.2)', borderRadius: 8 }}>
+                    <div style={{ fontSize: 20, fontWeight: 'bold', color: '#ff6b6b', marginBottom: 4 }}>
+                      {(backtestResults.maxDrawdown || 0).toFixed(2)}%
+                    </div>
+                    <div style={{ fontSize: 12, color: '#9aa1aa' }}>Max Drawdown</div>
+                  </div>
+                  <div style={{ textAlign: 'center', padding: 12, background: 'rgba(0,0,0,0.2)', borderRadius: 8 }}>
+                    <div style={{ fontSize: 20, fontWeight: 'bold', color: '#5da9ff', marginBottom: 4 }}>
+                      {(backtestResults.sharpeRatio || 0).toFixed(2)}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#9aa1aa' }}>Sharpe Ratio</div>
+                  </div>
+                </div>
+
+                {/* Recent Trades */}
+                {backtestResults.trades && backtestResults.trades.length > 0 && (
+                  <div>
+                    <h4 style={{ margin: 0, marginBottom: 12, color: '#5da9ff', fontSize: 14 }}>
+                      Recent Backtest Trades
+                    </h4>
+                    <div style={{ 
+                      maxHeight: 200, 
+                      overflowY: 'auto', 
+                      background: 'rgba(0,0,0,0.2)', 
+                      borderRadius: 8, 
+                      padding: 12 
+                    }}>
+                      {backtestResults.trades.map((trade, i) => (
+                        <div key={i} style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center',
+                          padding: '8px 12px',
+                          marginBottom: 6,
+                          background: 'rgba(255,255,255,0.05)',
+                          borderRadius: 6,
+                          borderLeft: `3px solid ${trade.side === 'buy' ? '#7ef0a2' : '#ff6b6b'}`
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ 
+                              fontSize: 12, 
+                              fontWeight: 'bold',
+                              color: trade.side === 'buy' ? '#7ef0a2' : '#ff6b6b'
+                            }}>
+                              {trade.side.toUpperCase()}
+                            </span>
+                            <span style={{ fontSize: 12, color: '#9aa1aa' }}>
+                              {trade.reason}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 12, color: '#cfd3d8' }}>
+                            ${trade.price?.toFixed(2)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
