@@ -620,114 +620,258 @@ export default function Backtesting() {
               📅 Calendar P&L Analysis ({layout.cols}×{layout.rows} Layout)
             </h3>
             
+            <style>{`
+              * {
+                box-sizing: border-box;
+                font-family: system-ui, sans-serif;
+              }
+              
+              .calendar-scene {
+                perspective: 1400px;
+              }
+              
+              .calendar-board {
+                width: 380px;
+                height: 350px;
+                position: relative;
+                transform-style: preserve-3d;
+                transition: transform 0.9s cubic-bezier(.2,.7,.2,1);
+                cursor: pointer;
+              }
+              
+              .calendar-board.flipped {
+                transform: rotateY(180deg);
+              }
+              
+              .calendar-face {
+                position: absolute;
+                inset: 0;
+                border-radius: 28px;
+                padding: 16px;
+                backface-visibility: hidden;
+                background: linear-gradient(145deg, #020617, #0b1220);
+                box-shadow:
+                  inset 0 6px 14px rgba(255,255,255,0.05),
+                  inset 0 -8px 16px rgba(0,0,0,0.6),
+                  0 20px 50px rgba(14,165,233,0.35),
+                  0 0 30px rgba(14,165,233,0.45);
+              }
+              
+              .calendar-face::before {
+                content: "";
+                position: absolute;
+                inset: -6px;
+                border-radius: 34px;
+                background: linear-gradient(to bottom, rgba(56,189,248,0.25), rgba(2,6,23,0.9));
+                z-index: -1;
+              }
+              
+              .calendar-front {
+                transform: translateZ(18px);
+                display: grid;
+                place-content: center;
+                text-align: center;
+              }
+              
+              .calendar-front h1 {
+                font-size: 80px;
+                letter-spacing: 6px;
+                margin: 0;
+                text-shadow: 0 0 6px rgba(56,189,248,0.35);
+              }
+              
+              .calendar-front .grab {
+                color: white;
+              }
+              
+              .calendar-front .x {
+                color: #38bdf8;
+              }
+              
+              .calendar-back {
+                transform: rotateY(180deg) translateZ(18px);
+                color: #7dd3fc;
+                display: flex;
+                flex-direction: column;
+                padding: 16px;
+                height: 100%;
+              }
+              
+              .calendar-back h2 {
+                text-align: center;
+                margin: 0 0 8px;
+                font-size: 40px;
+                font-weight: 600;
+                text-shadow: 0 0 6px rgba(255,255,255,0.15);
+              }
+              
+              .calendar-back h2 .month,
+              .calendar-back h2 .year {
+                font-size: 30px;
+                font-weight: 600;
+                text-shadow: 0 0 6px rgba(255,255,255,0.15);
+              }
+              
+              .calendar-back h2 .month {
+                color: white;
+                text-transform: uppercase;
+              }
+              
+              .calendar-back h2 .year {
+                color: #38bdf8;
+              }
+              
+              .calendar-spacer {
+                flex: 1;
+              }
+              
+              .calendar-weekdays {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                font-size: 10px;
+                opacity: 0.75;
+                margin: 0;
+                padding: 0;
+                line-height: 1;
+                position: relative;
+                top: -15px;
+              }
+              
+              .calendar-weekdays span {
+                text-align: center;
+              }
+              
+              .calendar-days {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                gap: 6px;
+                margin-top: 2px;
+              }
+              
+              .calendar-day {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 2px;
+                padding: 6px 0;
+                border-radius: 10px;
+                background: rgba(255,255,255,0.04);
+                backdrop-filter: blur(4px);
+              }
+              
+              .calendar-day.empty {
+                background: transparent;
+              }
+              
+              .calendar-day .date {
+                font-size: 12px;
+                opacity: 0.85;
+              }
+              
+              .calendar-day .pnl {
+                font-size: 11px;
+                font-weight: 600;
+              }
+              
+              .calendar-day.profit {
+                background: rgba(34,197,94,0.12);
+              }
+              
+              .calendar-day.profit .pnl {
+                color: #22c55e;
+              }
+              
+              .calendar-day.loss {
+                background: rgba(239,68,68,0.12);
+              }
+              
+              .calendar-day.loss .pnl {
+                color: #ef4444;
+              }
+            `}</style>
+            
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: `repeat(${layout.cols}, 1fr)`,
-              gap: 16
+              gap: 20
             }}>
               {Array.from({ length: layout.cols * layout.rows }).map((_, index) => {
                 const monthData = monthlyPnL[index];
                 const isEmpty = !monthData;
                 
                 return (
-                  <div 
-                    key={index} 
-                    style={{ 
-                      padding: 16,
-                      background: isEmpty ? 'rgba(255, 255, 255, 0.02)' : 'rgba(93, 169, 255, 0.1)',
-                      border: isEmpty ? '1px dashed rgba(255, 255, 255, 0.1)' : '1px solid rgba(93, 169, 255, 0.3)',
-                      borderRadius: 12,
-                      minHeight: 180,
-                      opacity: isEmpty ? 0.5 : 1,
-                      backdropFilter: 'blur(5px)'
-                    }}
-                  >
+                  <div key={index} style={{ display: 'flex', justifyContent: 'center' }}>
                     {isEmpty ? (
-                      <div style={{ 
-                        textAlign: 'center', 
-                        color: '#666', 
-                        fontSize: 14,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        height: '100%'
-                      }}>
-                        <div>
-                          <div style={{ fontSize: 20, marginBottom: 4 }}>📅</div>
-                          <div>Empty</div>
+                      <div className="calendar-scene">
+                        <div className="calendar-board">
+                          <div className="calendar-face calendar-front">
+                            <h1><span className="grab">GRAB</span><span className="x">X</span></h1>
+                          </div>
+                          <div className="calendar-face calendar-back">
+                            <h2><span className="month">EMPTY</span> <span className="year">—</span></h2>
+                            <div className="calendar-spacer"></div>
+                            <div className="calendar-weekdays">
+                              <span>Sun</span><span>Mon</span><span>Tue</span>
+                              <span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                            </div>
+                            <div className="calendar-days">
+                              {Array.from({ length: 35 }).map((_, dayIndex) => (
+                                <div key={dayIndex} className="calendar-day empty">
+                                  <span className="date"></span>
+                                  <span className="pnl">—</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ) : (
-                      <div>
-                        <div style={{ 
-                          fontSize: 14, 
-                          fontWeight: 'bold', 
-                          color: '#5da9ff', 
-                          marginBottom: 8,
-                          textAlign: 'center'
-                        }}>
-                          {monthData.monthName}
-                        </div>
-                        
-                        <div style={{ 
-                          fontSize: 20, 
-                          fontWeight: 'bold', 
-                          color: monthData.pnl >= 0 ? '#7ef0a2' : '#ff6b6b',
-                          marginBottom: 12,
-                          textAlign: 'center'
-                        }}>
-                          {monthData.pnl >= 0 ? '+' : ''}${monthData.pnl.toFixed(2)}
-                        </div>
-                        
-                        <div style={{ 
-                          fontSize: 10, 
-                          color: '#9aa1aa', 
-                          marginBottom: 8,
-                          textAlign: 'center'
-                        }}>
-                          {monthData.days.length} days
-                        </div>
-                        
-                        <div style={{ 
-                          display: 'grid', 
-                          gridTemplateColumns: 'repeat(7, 1fr)', 
-                          gap: 1,
-                          fontSize: 8,
-                          color: '#9aa1aa'
-                        }}>
-                          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                            <div key={i} style={{ textAlign: 'center', fontWeight: 'bold' }}>
-                              {day}
+                      <div className="calendar-scene">
+                        <div 
+                          className="calendar-board" 
+                          onClick={(e) => {
+                            e.currentTarget.classList.toggle('flipped');
+                          }}
+                        >
+                          <div className="calendar-face calendar-front">
+                            <h1><span className="grab">GRAB</span><span className="x">X</span></h1>
+                          </div>
+                          <div className="calendar-face calendar-back">
+                            <h2><span className="month">{monthData.monthName.toUpperCase()}</span> <span className="year">{monthData.year}</span></h2>
+                            <div className="calendar-spacer"></div>
+                            <div className="calendar-weekdays">
+                              <span>Sun</span><span>Mon</span><span>Tue</span>
+                              <span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
                             </div>
-                          ))}
-                          
-                          {/* Calendar days - compact version */}
-                          {Array.from({ length: 35 }).map((_, dayIndex) => {
-                            const dayData = monthData.days.find(d => d.day === dayIndex + 1);
-                            const hasData = dayData !== undefined;
-                            
-                            return (
-                              <div
-                                key={dayIndex}
-                                style={{
-                                  textAlign: 'center',
-                                  padding: '2px 1px',
-                                  borderRadius: 2,
-                                  background: hasData ? (
-                                    dayData.pnl >= 0 ? 'rgba(126, 240, 162, 0.2)' : 'rgba(255, 107, 107, 0.2)'
-                                  ) : 'transparent',
-                                  color: hasData ? (
-                                    dayData.pnl >= 0 ? '#7ef0a2' : '#ff6b6b'
-                                  ) : '#666',
-                                  fontSize: 9,
-                                  fontWeight: hasData ? 'bold' : 'normal'
-                                }}
-                                title={hasData ? `P&L: $${dayData.pnl.toFixed(2)}` : 'No data'}
-                              >
-                                {dayIndex < monthData.days.length ? dayIndex + 1 : ''}
-                              </div>
-                            );
-                          })}
+                            <div className="calendar-days">
+                              {Array.from({ length: 35 }).map((_, dayIndex) => {
+                                const dayData = monthData.days.find(d => d.day === dayIndex + 1);
+                                const hasData = dayData !== undefined;
+                                
+                                if (dayIndex < monthData.days.length) {
+                                  return (
+                                    <div 
+                                      key={dayIndex} 
+                                      className={`calendar-day ${hasData ? (dayData.pnl >= 0 ? 'profit' : 'loss') : ''}`}
+                                    >
+                                      <span className="date">{dayIndex + 1}</span>
+                                      <span className="pnl">
+                                        {hasData ? (dayData.pnl >= 0 ? `+$${dayData.pnl.toFixed(0)}` : `-$${Math.abs(dayData.pnl).toFixed(0)}`) : '—'}
+                                      </span>
+                                    </div>
+                                  );
+                                } else {
+                                  return (
+                                    <div key={dayIndex} className="calendar-day empty">
+                                      <span className="date"></span>
+                                      <span className="pnl">—</span>
+                                    </div>
+                                  );
+                                }
+                              })}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}
