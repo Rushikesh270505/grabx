@@ -74,7 +74,7 @@ export default function Backtesting() {
           monthlyData[monthKey] = {
             month: date.getMonth(),
             year: date.getFullYear(),
-            monthName: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+            monthName: date.toLocaleDateString('en-US', { month: 'short' }),
             pnl: 0,
             days: []
           };
@@ -220,6 +220,11 @@ export default function Backtesting() {
     if (monthCount <= 12) return { cols: 4, rows: 3 };
     if (monthCount <= 16) return { cols: 4, rows: 4 };
     if (monthCount <= 20) return { cols: 4, rows: 5 };
+    // For more than 5 columns (20 months), use first row for extra calendars
+    if (monthCount > 20) {
+      const extraCols = monthCount - 20;
+      return { cols: 4 + extraCols, rows: 5 };
+    }
     return { cols: 4, rows: Math.ceil(monthCount / 4) };
   };
 
