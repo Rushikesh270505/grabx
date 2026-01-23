@@ -138,20 +138,23 @@ export default function Backtesting() {
           justifyContent: 'center',
           zIndex: 1000
         }}>
-          <div className="glass-panel" style={{
+          <div style={{
             padding: 40,
             maxWidth: 500,
             width: '90%',
-            background: 'rgba(0, 0, 0, 0.9)',
+            background: 'rgba(0, 0, 0, 0.8)',
             border: '1px solid rgba(93, 169, 255, 0.3)',
-            borderRadius: 16
+            borderRadius: 16,
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
           }}>
             <h2 style={{ 
               margin: 0, 
               marginBottom: 30, 
               color: '#5da9ff', 
               fontSize: 24,
-              textAlign: 'center'
+              textAlign: 'center',
+              fontWeight: 700
             }}>
               📅 Select Backtesting Period
             </h2>
@@ -170,7 +173,8 @@ export default function Backtesting() {
                   background: 'rgba(0, 0, 0, 0.5)',
                   border: '1px solid rgba(93, 169, 255, 0.3)',
                   color: '#fff',
-                  fontSize: 16
+                  fontSize: 16,
+                  transition: 'all 0.2s ease'
                 }}
               >
                 <option value="BTCUSDT">BTC/USDT</option>
@@ -197,7 +201,8 @@ export default function Backtesting() {
                     background: 'rgba(0, 0, 0, 0.5)',
                     border: '1px solid rgba(93, 169, 255, 0.3)',
                     color: '#fff',
-                    fontSize: 16
+                    fontSize: 16,
+                    transition: 'all 0.2s ease'
                   }}
                 />
               </div>
@@ -216,7 +221,8 @@ export default function Backtesting() {
                     background: 'rgba(0, 0, 0, 0.5)',
                     border: '1px solid rgba(93, 169, 255, 0.3)',
                     color: '#fff',
-                    fontSize: 16
+                    fontSize: 16,
+                    transition: 'all 0.2s ease'
                   }}
                 />
               </div>
@@ -238,7 +244,8 @@ export default function Backtesting() {
                     background: 'rgba(0, 0, 0, 0.5)',
                     border: '1px solid rgba(93, 169, 255, 0.3)',
                     color: '#fff',
-                    fontSize: 16
+                    fontSize: 16,
+                    transition: 'all 0.2s ease'
                   }}
                 />
               </div>
@@ -258,7 +265,8 @@ export default function Backtesting() {
                     background: 'rgba(0, 0, 0, 0.5)',
                     border: '1px solid rgba(93, 169, 255, 0.3)',
                     color: '#fff',
-                    fontSize: 16
+                    fontSize: 16,
+                    transition: 'all 0.2s ease'
                   }}
                 />
               </div>
@@ -294,7 +302,8 @@ export default function Backtesting() {
                   fontWeight: 700,
                   cursor: 'pointer',
                   fontSize: 16,
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 12px rgba(93, 169, 255, 0.3)'
                 }}
               >
                 🚀 Start Backtesting
@@ -308,14 +317,17 @@ export default function Backtesting() {
       {!showDatePrompt && (
         <>
           {/* Header */}
-          <div className="glass-panel" style={{ 
+          <div style={{ 
             padding: 20, 
             marginBottom: 24, 
             textAlign: 'center',
             background: 'rgba(0, 0, 0, 0.8)',
-            border: '1px solid rgba(93, 169, 255, 0.3)'
+            border: '1px solid rgba(93, 169, 255, 0.3)',
+            borderRadius: 16,
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
           }}>
-            <h1 style={{ margin: 0, fontSize: 32, color: '#5da9ff' }}>
+            <h1 style={{ margin: 0, fontSize: 32, color: '#5da9ff', fontWeight: 700 }}>
               📈 {symbol} Backtesting
             </h1>
             <p style={{ color: '#9aa1aa', margin: 0, fontSize: 16, marginTop: 8 }}>
@@ -325,10 +337,10 @@ export default function Backtesting() {
               <button
                 onClick={() => setShowDatePrompt(true)}
                 style={{
-                  padding: '8px 16px',
+                  padding: '10px 20px',
                   background: 'rgba(93, 169, 255, 0.2)',
                   border: '1px solid rgba(93, 169, 255, 0.3)',
-                  borderRadius: 8,
+                  borderRadius: 10,
                   color: '#5da9ff',
                   cursor: 'pointer',
                   fontSize: 14,
@@ -342,15 +354,16 @@ export default function Backtesting() {
                 onClick={runBacktest}
                 disabled={isRunning}
                 style={{
-                  padding: '8px 16px',
+                  padding: '10px 20px',
                   background: isRunning ? '#ff6b6b' : '#7ef0a2',
                   border: 'none',
-                  borderRadius: 8,
+                  borderRadius: 10,
                   color: '#000',
                   fontWeight: 700,
                   cursor: isRunning ? 'not-allowed' : 'pointer',
                   fontSize: 14,
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
+                  boxShadow: isRunning ? '0 4px 12px rgba(255, 107, 107, 0.3)' : '0 4px 12px rgba(126, 240, 162, 0.3)'
                 }}
               >
                 {isRunning ? '⏳ Running...' : '🚀 Run Backtest'}
@@ -363,12 +376,15 @@ export default function Backtesting() {
             {/* Left Side: Calendar P&L */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
               {/* Calendar P&L Section */}
-              <div className="glass-panel" style={{ 
+              <div style={{ 
                 padding: 20,
                 background: 'rgba(0, 0, 0, 0.8)',
-                border: '1px solid rgba(93, 169, 255, 0.3)'
+                border: '1px solid rgba(93, 169, 255, 0.3)',
+                borderRadius: 16,
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
               }}>
-                <h3 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 20 }}>
+                <h3 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 20, fontWeight: 600 }}>
                   📅 Calendar P&L Analysis
                 </h3>
                 
@@ -391,7 +407,8 @@ export default function Backtesting() {
                           border: isEmpty ? '1px dashed rgba(255, 255, 255, 0.1)' : '1px solid rgba(93, 169, 255, 0.3)',
                           borderRadius: 12,
                           minHeight: 200,
-                          opacity: isEmpty ? 0.5 : 1
+                          opacity: isEmpty ? 0.5 : 1,
+                          backdropFilter: 'blur(5px)'
                         }}
                       >
                         {isEmpty ? (
@@ -496,7 +513,8 @@ export default function Backtesting() {
                   gap: 16,
                   padding: 16,
                   background: 'rgba(93, 169, 255, 0.05)',
-                  borderRadius: 8
+                  borderRadius: 12,
+                  border: '1px solid rgba(93, 169, 255, 0.2)'
                 }}>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 14, color: '#9aa1aa', marginBottom: 4 }}>
@@ -539,12 +557,15 @@ export default function Backtesting() {
 
               {/* Results Panel */}
               {results && (
-                <div className="glass-panel" style={{ 
+                <div style={{ 
                   padding: 20,
                   background: 'rgba(0, 0, 0, 0.8)',
-                  border: '1px solid rgba(93, 169, 255, 0.3)'
+                  border: '1px solid rgba(93, 169, 255, 0.3)',
+                  borderRadius: 16,
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
                 }}>
-                  <h3 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 20 }}>
+                  <h3 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 20, fontWeight: 600 }}>
                     📊 Backtest Results
                   </h3>
                   
@@ -609,13 +630,16 @@ export default function Backtesting() {
 
             {/* Right Side: Chart */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-              <div className="glass-panel" style={{ 
+              <div style={{ 
                 padding: 20,
                 flex: 1,
                 background: 'rgba(0, 0, 0, 0.8)',
-                border: '1px solid rgba(93, 169, 255, 0.3)'
+                border: '1px solid rgba(93, 169, 255, 0.3)',
+                borderRadius: 16,
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
               }}>
-                <h3 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 20 }}>
+                <h3 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 20, fontWeight: 600 }}>
                   📈 Price Chart
                 </h3>
                 <div style={{ 
@@ -673,7 +697,8 @@ export default function Backtesting() {
                     padding: '8px 12px',
                     borderRadius: 8,
                     fontSize: 12,
-                    color: '#9aa1aa'
+                    color: '#9aa1aa',
+                    border: '1px solid rgba(93, 169, 255, 0.2)'
                   }}>
                     <div style={{ marginBottom: 4 }}>
                       <strong>Current Pair:</strong> {symbol}
@@ -690,12 +715,15 @@ export default function Backtesting() {
 
               {/* Trade History */}
               {results && results.trades && (
-                <div className="glass-panel" style={{ 
+                <div style={{ 
                   padding: 20,
                   background: 'rgba(0, 0, 0, 0.8)',
-                  border: '1px solid rgba(93, 169, 255, 0.3)'
+                  border: '1px solid rgba(93, 169, 255, 0.3)',
+                  borderRadius: 16,
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
                 }}>
-                  <h3 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 20 }}>
+                  <h3 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 20, fontWeight: 600 }}>
                     📋 Recent Trades
                   </h3>
                   <div style={{ 
@@ -754,7 +782,9 @@ export default function Backtesting() {
             cursor: 'pointer',
             fontSize: 14,
             fontWeight: 600,
-            transition: 'all 0.2s ease'
+            transition: 'all 0.2s ease',
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 4px 12px rgba(93, 169, 255, 0.3)'
           }}
         >
           ← Back to Custom Bot
