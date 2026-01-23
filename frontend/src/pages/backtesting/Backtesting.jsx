@@ -322,14 +322,14 @@ export default function Backtesting() {
             <div style={{ marginBottom: 24 }}>
               <div style={{ 
                 padding: 16,
-                background: 'rgba(93, 169, 255, 0.1)',
-                border: '1px solid rgba(93, 169, 255, 0.3)',
+                background: 'rgba(93, 169, 255, 0.2)',
+                border: '1px solid rgba(93, 169, 255, 0.5)',
                 borderRadius: 12,
-                color: '#9aa1aa',
+                color: '#fff',
                 fontSize: 14,
                 textAlign: 'center'
               }}>
-                <div style={{ marginBottom: 8, fontSize: 16, fontWeight: 600, color: '#5da9ff' }}>
+                <div style={{ marginBottom: 8, fontSize: 16, fontWeight: 600, color: '#fff' }}>
                   📅 Selected Period Overview
                 </div>
                 <div style={{ marginBottom: 8 }}>
