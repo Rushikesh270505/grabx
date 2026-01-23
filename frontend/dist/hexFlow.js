@@ -3,14 +3,14 @@ console.log("HEX EDGE FLOW + GRABX BACKGROUND - OPTIMIZED");
 const canvas = document.getElementById("hexagonCanvas");
 const ctx = canvas.getContext("2d", { alpha: false }); // performance optimization
 
-const HEX_SIZE = 20;
+const HEX_SIZE = 25;
 const BASE_SPEED = 0.45; // units per second
-const BASE_DENSITY = 0.00035; // reduced density for better performance
+const BASE_DENSITY = 0.0014; // increased for more visible lines
 
 const COLORS = [
-  { stroke: "rgba(255,255,255,0.85)", glow: "rgba(255,255,255,0.22)", blur: 12 },
-  { stroke: "rgba(0,180,255,0.85)", glow: "rgba(0,150,255,0.18)", blur: 16 },
-  { stroke: "rgba(0,90,200,0.75)", glow: "rgba(0,100,255,0.16)", blur: 18 }
+  { stroke: "rgba(255,255,255,0.95)", glow: "rgba(255,255,255,0.35)", blur: 18 },
+  { stroke: "rgba(0,180,255,0.95)", glow: "rgba(0,150,255,0.28)", blur: 22 },
+  { stroke: "rgba(0,90,200,0.90)", glow: "rgba(0,100,255,0.25)", blur: 25 }
 ];
 
 const hexes = [];
@@ -28,10 +28,24 @@ function resizeCanvas() {
   // cap DPR to reduce workload on high-DPI screens
   const rawDpr = window.devicePixelRatio || 1;
   const dpr = Math.min(rawDpr, 1.5);
-  canvas.width = Math.round(window.innerWidth * dpr);
-  canvas.height = Math.round(window.innerHeight * dpr);
-  canvas.style.width = window.innerWidth + 'px';
-  canvas.style.height = window.innerHeight + 'px';
+  
+  // Use full document height to cover entire scrollable area
+  const width = window.innerWidth;
+  const height = Math.max(
+    window.innerHeight, 
+    document.documentElement.scrollHeight,
+    document.body.scrollHeight,
+    document.documentElement.offsetHeight,
+    document.body.offsetHeight,
+    2000 // Minimum height to ensure coverage
+  );
+  
+  console.log('Canvas height:', height, 'Document scroll height:', document.documentElement.scrollHeight);
+  
+  canvas.width = Math.round(width * dpr);
+  canvas.height = Math.round(height * dpr);
+  canvas.style.width = width + 'px';
+  canvas.style.height = height + 'px';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   hexes.length = 0;
@@ -41,7 +55,7 @@ function resizeCanvas() {
 
   // scale number of flows by viewport area to maintain consistent density
   const area = window.innerWidth * window.innerHeight;
-  const targetLines = Math.max(1500, Math.floor(area * BASE_DENSITY)); // reduced base count
+  const targetLines = Math.max(12000, Math.floor(area * BASE_DENSITY)); // increased for more lines
 
   for (let i = 0; i < targetLines; i++) {
     flows.push({
@@ -57,6 +71,30 @@ function resizeCanvas() {
 }
 
 window.addEventListener("resize", resizeCanvas);
+window.addEventListener("scroll", () => {
+  // Always recalculate on scroll to ensure full coverage
+  resizeCanvas();
+});
+
+// ResizeObserver to handle dynamic content changes
+const resizeObserver = new ResizeObserver(() => {
+  resizeCanvas();
+});
+resizeObserver.observe(document.body);
+resizeObserver.observe(document.documentElement);
+
+// Also check periodically for content changes
+setInterval(() => {
+  const currentHeight = Math.max(
+    window.innerHeight, 
+    document.documentElement.scrollHeight,
+    document.body.scrollHeight
+  );
+  const canvasHeight = parseInt(canvas.style.height) || 0;
+  if (Math.abs(canvasHeight - currentHeight) > 50) {
+    resizeCanvas();
+  }
+}, 1000);
 
 // Mouse click burst feature
 canvas.addEventListener('click', (e) => {
@@ -69,7 +107,7 @@ canvas.addEventListener('click', (e) => {
   const clickTime = Date.now();
   
   for (let i = 0; i < burstCount; i++) {
-    // Find nearest hex to click position
+    // Find nearest hex to click position as starting point
     let minDist = Infinity;
     let nearestHex = 0;
     
@@ -111,13 +149,19 @@ function generateGrid() {
   const step = h * 0.75;
   let row = 0;
 
-  for (let y = -h; y < window.innerHeight + h; y += step) {
+  // Use canvas height instead of window.innerHeight to cover full area
+  const canvasHeight = canvas.height || 2000;
+  const canvasWidth = canvas.width || window.innerWidth;
+
+  for (let y = -h; y < canvasHeight + h; y += step) {
     const offset = row % 2 ? w / 2 : 0;
-    for (let x = -w; x < window.innerWidth + w; x += w) {
+    for (let x = -w; x < canvasWidth + w; x += w) {
       hexes.push(hexVertices(x + offset, y, HEX_SIZE));
     }
     row++;
   }
+  
+  console.log('Generated', hexes.length, 'hexagons for canvas size:', canvasWidth, 'x', canvasHeight);
 }
 
 function animate(now) {
@@ -172,13 +216,32 @@ function animate(now) {
 
   ctx.globalCompositeOperation = 'lighter';
 
+  // Draw hexagon outlines first
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.shadowColor = 'rgba(255,255,255,0.05)';
+  ctx.shadowBlur = 4;
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  
+  for (let i = 0; i < hexes.length; i++) {
+    const hex = hexes[i];
+    ctx.moveTo(hex[0].x, hex[0].y);
+    for (let j = 1; j < 6; j++) {
+      ctx.lineTo(hex[j].x, hex[j].y);
+    }
+    ctx.closePath();
+  }
+  ctx.stroke();
+
+  // Now draw flow lines
+
   for (const colorIndexStr in flowsByColor) {
     const colorIndex = Number(colorIndexStr);
     const col = COLORS[colorIndex];
     ctx.strokeStyle = col.stroke;
     ctx.shadowColor = col.glow;
     ctx.shadowBlur = col.blur * 0.75;
-    ctx.lineWidth = allFlows[0].isClickFlow ? 1.8 : 1.2;
+    ctx.lineWidth = allFlows[0].isClickFlow ? 2.5 : 1.8;
 
     const list = flowsByColor[colorIndex];
     ctx.beginPath();
@@ -202,8 +265,8 @@ function animate(now) {
 
       // Dynamic segment length based on flow type
       const segmentLength = f.isClickFlow ? 
-        (0.2 + (pulseActive ? 0.15 : 0)) : 
-        (0.34 + (pulseActive ? 0.18 : 0));
+        (0.4 + (pulseActive ? 0.2 : 0)) : 
+        (0.25 + (pulseActive ? 0.15 : 0));
       
       const sx = a.x + (b.x - a.x) * Math.max(0, f.t - segmentLength);
       const sy = a.y + (b.y - a.y) * Math.max(0, f.t - segmentLength);

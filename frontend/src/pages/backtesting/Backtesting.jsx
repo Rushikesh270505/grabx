@@ -1008,7 +1008,8 @@ export default function Backtesting() {
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: `repeat(${layout.cols}, 1fr)`,
-              gap: 20
+              gap: '35px', // uniform gap for both rows and columns
+              padding: '20px'
             }}>
               {Array.from({ length: layout.cols * layout.rows }).map((_, index) => {
                 const monthData = monthlyPnL[index];
