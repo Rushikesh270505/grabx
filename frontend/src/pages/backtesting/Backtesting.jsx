@@ -158,11 +158,9 @@ export default function Backtesting() {
           );
           
           if (monthIndex !== -1 && !flippedMonths.has(monthIndex)) {
-            // Check if this is the last day of the month
-            const monthDays = monthlyPnL[monthIndex].days;
-            const lastDayOfMonth = monthDays[monthDays.length - 1];
-            
-            if (currentDayData.day === lastDayOfMonth.day) {
+            // Always flip the first month immediately when backtesting starts
+            if (processedDays === 1 || currentDayData.day === monthlyPnL[monthIndex].days.length) {
+              console.log(`Flipping month ${monthIndex}, day ${currentDayData.day}`);
               setCurrentMonthIndex(monthIndex);
               setFlippedMonths(prev => new Set([...prev, monthIndex]));
             }
