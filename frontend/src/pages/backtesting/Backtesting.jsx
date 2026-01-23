@@ -359,7 +359,7 @@ export default function Backtesting() {
 
             <div style={{ display: 'flex', gap: 16 }}>
               <button
-                onClick={() => navigate('/custom-bot')}
+                onClick={() => setShowDatePrompt(false)}
                 style={{
                   flex: 1,
                   padding: '16px 24px',
