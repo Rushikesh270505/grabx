@@ -21,6 +21,10 @@ export default function Backtesting() {
   const [dailyPnL, setDailyPnL] = useState([]);
   const [monthlyPnL, setMonthlyPnL] = useState([]);
   const [livePrice, setLivePrice] = useState(60000);
+  const [backtestProgress, setBacktestProgress] = useState(0);
+  const [currentDayIndex, setCurrentDayIndex] = useState(0);
+  const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
+  const [flippedMonths, setFlippedMonths] = useState(new Set());
 
   // Generate mock chart data for selected period
   useEffect(() => {
@@ -106,28 +110,83 @@ export default function Backtesting() {
 
   const runBacktest = () => {
     setIsRunning(true);
+    setBacktestProgress(0);
+    setCurrentDayIndex(0);
+    setCurrentMonthIndex(0);
+    setFlippedMonths(new Set());
     
-    // Simulate backtest processing
-    setTimeout(() => {
-      const mockResults = {
-        totalTrades: Math.floor(Math.random() * 50) + 10,
-        profitLoss: (Math.random() - 0.5) * 5000,
-        profitLossPercentage: (Math.random() - 0.5) * 20,
-        winRate: Math.random() * 40 + 30,
-        maxDrawdown: Math.random() * 15 + 5,
-        finalBalance: backtestConfig.initialCapital + ((Math.random() - 0.5) * 5000),
-        sharpeRatio: (Math.random() - 0.5) * 2,
-        trades: Array.from({ length: 10 }, (_, i) => ({
-          timestamp: Date.now() - (i * 24 * 60 * 60 * 1000),
-          side: Math.random() > 0.5 ? 'buy' : 'sell',
-          price: 60000 + (Math.random() - 0.5) * 2000,
-          reason: ['Price above threshold', 'RSI oversold', 'MACD crossover', 'Support level hit'][Math.floor(Math.random() * 4)]
-        }))
-      };
-      
-      setResults(mockResults);
-      setIsRunning(false);
-    }, 3000); // 3 second simulation
+    // Reset results
+    setResults(null);
+    
+    const totalDays = dailyPnL.length;
+    const totalMonths = monthlyPnL.length;
+    let processedDays = 0;
+    let processedMonths = 0;
+    let currentBalance = backtestConfig.initialCapital;
+    let trades = [];
+    let totalProfitLoss = 0;
+    
+    // Process day by day
+    const processDay = () => {
+      if (processedDays < totalDays) {
+        const dayData = dailyPnL[processedDays];
+        currentBalance += dayData.pnl;
+        totalProfitLoss += dayData.pnl;
+        
+        // Generate random trade for this day
+        if (Math.random() > 0.7) {
+          trades.push({
+            timestamp: Date.now() - ((totalDays - processedDays) * 24 * 60 * 60 * 1000),
+            side: Math.random() > 0.5 ? 'buy' : 'sell',
+            price: 60000 + (Math.random() - 0.5) * 2000,
+            reason: ['Price above threshold', 'RSI oversold', 'MACD crossover', 'Support level hit'][Math.floor(Math.random() * 4)]
+          });
+        }
+        
+        setCurrentDayIndex(processedDays);
+        processedDays++;
+        
+        // Update progress
+        const progress = (processedDays / totalDays) * 100;
+        setBacktestProgress(progress);
+        
+        // Check if we completed a month
+        const currentMonthData = monthlyPnL[processedMonths];
+        if (currentMonthData && processedDays >= currentMonthData.days.length + (processedMonths > 0 ? monthlyPnL[processedMonths - 1].days.length : 0)) {
+          setCurrentMonthIndex(processedMonths);
+          setFlippedMonths(prev => new Set([...prev, processedMonths]));
+          processedMonths++;
+        }
+        
+        // Update live price
+        setLivePrice(prev => {
+          const change = (Math.random() - 0.5) * 100;
+          return Math.max(0, prev + change);
+        });
+        
+        // Continue processing
+        setTimeout(processDay, 100); // Process each day with 100ms delay
+      } else {
+        // Backtest completed
+        const mockResults = {
+          totalTrades: trades.length,
+          profitLoss: totalProfitLoss,
+          profitLossPercentage: (totalProfitLoss / backtestConfig.initialCapital) * 100,
+          winRate: Math.random() * 40 + 30,
+          maxDrawdown: Math.random() * 15 + 5,
+          finalBalance: currentBalance,
+          sharpeRatio: (Math.random() - 0.5) * 2,
+          trades: trades.slice(-10) // Show last 10 trades
+        };
+        
+        setResults(mockResults);
+        setIsRunning(false);
+        setBacktestProgress(100);
+      }
+    };
+    
+    // Start processing
+    processDay();
   };
 
   // Calculate calendar grid layout
@@ -376,7 +435,7 @@ export default function Backtesting() {
               📈 {symbol} Backtesting
             </h1>
             
-            <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <button
                 onClick={() => setShowDatePrompt(true)}
                 style={{
@@ -413,6 +472,42 @@ export default function Backtesting() {
               </button>
             </div>
           </div>
+
+          {/* Progress Bar */}
+          {isRunning && (
+            <div style={{ 
+              marginBottom: 24,
+              padding: '16px 24px',
+              background: 'rgba(0, 0, 0, 0.8)',
+              border: '1px solid rgba(93, 169, 255, 0.3)',
+              borderRadius: 16,
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <h4 style={{ margin: 0, color: '#5da9ff', fontSize: 16, fontWeight: 600 }}>
+                  🔄 Backtesting Progress
+                </h4>
+                <span style={{ color: '#9aa1aa', fontSize: 14 }}>
+                  Day {currentDayIndex + 1} of {dailyPnL.length} • {backtestProgress.toFixed(1)}%
+                </span>
+              </div>
+              <div style={{ 
+                height: 8, 
+                background: 'rgba(255, 255, 255, 0.1)', 
+                borderRadius: 4,
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  height: '100%',
+                  width: `${backtestProgress}%`,
+                  background: 'linear-gradient(90deg, #5da9ff, #7ef0a2)',
+                  borderRadius: 4,
+                  transition: 'width 0.3s ease'
+                }}></div>
+              </div>
+            </div>
+          )}
 
           {/* Main Content Area */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
@@ -526,23 +621,23 @@ export default function Backtesting() {
                 💰 P&L Dashboard
               </h3>
               
-              {results ? (
+              {results || isRunning ? (
                 <div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
                     <div style={{ textAlign: 'center', padding: 16, background: 'rgba(93, 169, 255, 0.1)', borderRadius: 12 }}>
                       <div style={{ fontSize: 28, fontWeight: 'bold', color: '#5da9ff', marginBottom: 8 }}>
-                        ${results.finalBalance?.toFixed(2)}
+                        ${isRunning ? (backtestConfig.initialCapital + (dailyPnL.slice(0, currentDayIndex).reduce((sum, d) => sum + d.pnl, 0))).toFixed(2) : results?.finalBalance?.toFixed(2)}
                       </div>
-                      <div style={{ fontSize: 14, color: '#9aa1aa' }}>Final Balance</div>
+                      <div style={{ fontSize: 14, color: '#9aa1aa' }}>Current Balance</div>
                     </div>
                     <div style={{ textAlign: 'center', padding: 16, background: 'rgba(93, 169, 255, 0.1)', borderRadius: 12 }}>
                       <div style={{ 
                         fontSize: 28, 
                         fontWeight: 'bold', 
-                        color: results.profitLoss >= 0 ? '#7ef0a2' : '#ff6b6b', 
+                        color: (isRunning ? dailyPnL.slice(0, currentDayIndex).reduce((sum, d) => sum + d.pnl, 0) : results?.profitLoss) >= 0 ? '#7ef0a2' : '#ff6b6b', 
                         marginBottom: 8 
                       }}>
-                        {results.profitLoss >= 0 ? '+' : ''}${results.profitLoss?.toFixed(2)}
+                        {(isRunning ? dailyPnL.slice(0, currentDayIndex).reduce((sum, d) => sum + d.pnl, 0) : results?.profitLoss) >= 0 ? '+' : ''}${(isRunning ? dailyPnL.slice(0, currentDayIndex).reduce((sum, d) => sum + d.pnl, 0) : results?.profitLoss)?.toFixed(2)}
                       </div>
                       <div style={{ fontSize: 14, color: '#9aa1aa' }}>Total P&L</div>
                     </div>
@@ -551,34 +646,34 @@ export default function Backtesting() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 20 }}>
                     <div style={{ textAlign: 'center', padding: 16, background: 'rgba(93, 169, 255, 0.1)', borderRadius: 12 }}>
                       <div style={{ fontSize: 24, fontWeight: 'bold', color: '#5da9ff', marginBottom: 8 }}>
-                        {results.profitLossPercentage?.toFixed(2)}%
+                        {isRunning ? ((dailyPnL.slice(0, currentDayIndex).reduce((sum, d) => sum + d.pnl, 0) / backtestConfig.initialCapital) * 100).toFixed(2) : results?.profitLossPercentage?.toFixed(2)}%
                       </div>
                       <div style={{ fontSize: 14, color: '#9aa1aa' }}>Return %</div>
                     </div>
                     <div style={{ textAlign: 'center', padding: 16, background: 'rgba(93, 169, 255, 0.1)', borderRadius: 12 }}>
                       <div style={{ fontSize: 24, fontWeight: 'bold', color: '#5da9ff', marginBottom: 8 }}>
-                        {results.winRate?.toFixed(1)}%
+                        {isRunning ? currentDayIndex : results?.totalTrades}
                       </div>
-                      <div style={{ fontSize: 14, color: '#9aa1aa' }}>Win Rate</div>
+                      <div style={{ fontSize: 14, color: '#9aa1aa' }}>Days Processed</div>
                     </div>
                     <div style={{ textAlign: 'center', padding: 16, background: 'rgba(93, 169, 255, 0.1)', borderRadius: 12 }}>
                       <div style={{ fontSize: 24, fontWeight: 'bold', color: '#5da9ff', marginBottom: 8 }}>
-                        {results.totalTrades}
+                        {isRunning ? currentMonthIndex + 1 : monthlyPnL.filter(m => m.pnl >= 0).length}/{isRunning ? monthlyPnL.length : monthlyPnL.length}
                       </div>
-                      <div style={{ fontSize: 14, color: '#9aa1aa' }}>Total Trades</div>
+                      <div style={{ fontSize: 14, color: '#9aa1aa' }}>Months</div>
                     </div>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <div style={{ textAlign: 'center', padding: 16, background: 'rgba(93, 169, 255, 0.1)', borderRadius: 12 }}>
                       <div style={{ fontSize: 24, fontWeight: 'bold', color: '#ff6b6b', marginBottom: 8 }}>
-                        {results.maxDrawdown?.toFixed(2)}%
+                        {isRunning ? '0.00' : results?.maxDrawdown?.toFixed(2)}%
                       </div>
                       <div style={{ fontSize: 14, color: '#9aa1aa' }}>Max Drawdown</div>
                     </div>
                     <div style={{ textAlign: 'center', padding: 16, background: 'rgba(93, 169, 255, 0.1)', borderRadius: 12 }}>
                       <div style={{ fontSize: 24, fontWeight: 'bold', color: '#5da9ff', marginBottom: 8 }}>
-                        {results.sharpeRatio?.toFixed(2)}
+                        {isRunning ? '0.00' : results?.sharpeRatio?.toFixed(2)}
                       </div>
                       <div style={{ fontSize: 14, color: '#9aa1aa' }}>Sharpe Ratio</div>
                     </div>
@@ -618,7 +713,7 @@ export default function Backtesting() {
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
           }}>
             <h3 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 20, fontWeight: 600 }}>
-              📅 Calendar P&L Analysis ({layout.cols}×{layout.rows} Layout)
+              📅 Calendar P&L Analysis
             </h3>
             
             <style>{`
@@ -829,12 +924,7 @@ export default function Backtesting() {
                       </div>
                     ) : (
                       <div className="calendar-scene">
-                        <div 
-                          className="calendar-board" 
-                          onClick={(e) => {
-                            e.currentTarget.classList.toggle('flipped');
-                          }}
-                        >
+                        <div className={`calendar-board ${flippedMonths.has(index) ? 'flipped' : ''}`}>
                           <div className="calendar-face calendar-front">
                             <h1><span className="grab">GRAB</span><span className="x">X</span></h1>
                           </div>
@@ -849,16 +939,19 @@ export default function Backtesting() {
                               {Array.from({ length: 35 }).map((_, dayIndex) => {
                                 const dayData = monthData.days.find(d => d.day === dayIndex + 1);
                                 const hasData = dayData !== undefined;
+                                const isProcessed = dayIndex < currentDayIndex && dailyPnL[currentDayIndex - 1] && 
+                                                  dailyPnL[currentDayIndex - 1].month === monthData.month && 
+                                                  dailyPnL[currentDayIndex - 1].year === monthData.year;
                                 
                                 if (dayIndex < monthData.days.length) {
                                   return (
                                     <div 
                                       key={dayIndex} 
-                                      className={`calendar-day ${hasData ? (dayData.pnl >= 0 ? 'profit' : 'loss') : ''}`}
+                                      className={`calendar-day ${hasData && isProcessed ? (dayData.pnl >= 0 ? 'profit' : 'loss') : ''}`}
                                     >
                                       <span className="date">{dayIndex + 1}</span>
                                       <span className="pnl">
-                                        {hasData ? (dayData.pnl >= 0 ? `+$${dayData.pnl.toFixed(0)}` : `-$${Math.abs(dayData.pnl).toFixed(0)}`) : '—'}
+                                        {hasData && isProcessed ? (dayData.pnl >= 0 ? `+$${dayData.pnl.toFixed(0)}` : `-$${Math.abs(dayData.pnl).toFixed(0)}`) : '—'}
                                       </span>
                                     </div>
                                   );
