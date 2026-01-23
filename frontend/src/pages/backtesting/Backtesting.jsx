@@ -313,6 +313,42 @@ export default function Backtesting() {
               </div>
             </div>
 
+            {/* Calendar Preview */}
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ color: '#cfd3d8', fontSize: 16, fontWeight: 600, display: 'block', marginBottom: 12 }}>
+                Selected Period Overview
+              </label>
+              <div style={{ 
+                padding: 16,
+                background: 'rgba(0, 0, 0, 0.5)',
+                border: '1px solid rgba(93, 169, 255, 0.3)',
+                borderRadius: 12,
+                color: '#9aa1aa',
+                fontSize: 14,
+                textAlign: 'center'
+              }}>
+                <div style={{ marginBottom: 8 }}>
+                  <strong>Start:</strong> {new Date(backtestConfig.startDate).toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </div>
+                <div style={{ marginBottom: 8 }}>
+                  <strong>End:</strong> {new Date(backtestConfig.endDate).toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </div>
+                <div>
+                  <strong>Duration:</strong> {Math.ceil((new Date(backtestConfig.endDate) - new Date(backtestConfig.startDate)) / (1000 * 60 * 60 * 24))} days
+                </div>
+              </div>
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 30 }}>
               <div>
                 <label style={{ color: '#cfd3d8', fontSize: 16, fontWeight: 600, display: 'block', marginBottom: 12 }}>
