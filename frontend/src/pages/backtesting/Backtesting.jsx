@@ -20,6 +20,7 @@ export default function Backtesting() {
   const [chartData, setChartData] = useState([]);
   const [dailyPnL, setDailyPnL] = useState([]);
   const [monthlyPnL, setMonthlyPnL] = useState([]);
+  const [livePrice, setLivePrice] = useState(60000);
 
   // Generate mock chart data for selected period
   useEffect(() => {
@@ -91,6 +92,18 @@ export default function Backtesting() {
     generateChartData();
   }, [backtestConfig.startDate, backtestConfig.endDate]);
 
+  // Simulate live price updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLivePrice(prev => {
+        const change = (Math.random() - 0.5) * 100;
+        return Math.max(0, prev + change);
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const runBacktest = () => {
     setIsRunning(true);
     
@@ -117,9 +130,21 @@ export default function Backtesting() {
     }, 3000); // 3 second simulation
   };
 
+  // Calculate calendar grid layout
+  const getCalendarLayout = () => {
+    const monthCount = monthlyPnL.length;
+    if (monthCount <= 6) return { cols: 6, rows: 1 };
+    if (monthCount <= 12) return { cols: 6, rows: 2 };
+    if (monthCount <= 18) return { cols: 6, rows: 3 };
+    if (monthCount <= 24) return { cols: 6, rows: 4 };
+    return { cols: 6, rows: Math.ceil(monthCount / 6) };
+  };
+
+  const layout = getCalendarLayout();
+
   return (
     <div style={{ 
-      padding: 24, 
+      padding: 20, 
       color: '#fff', 
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #0a0e27 0%, #151923 100%)'
@@ -316,24 +341,41 @@ export default function Backtesting() {
       {/* Main Content - Only show after date selection */}
       {!showDatePrompt && (
         <>
-          {/* Header */}
+          {/* Top Navigation */}
           <div style={{ 
-            padding: 20, 
-            marginBottom: 24, 
-            textAlign: 'center',
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            marginBottom: 24,
+            padding: '16px 24px',
             background: 'rgba(0, 0, 0, 0.8)',
             border: '1px solid rgba(93, 169, 255, 0.3)',
             borderRadius: 16,
             backdropFilter: 'blur(10px)',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
           }}>
-            <h1 style={{ margin: 0, fontSize: 32, color: '#5da9ff', fontWeight: 700 }}>
+            <button
+              onClick={() => navigate('/custom-bot', { state: { symbol: symbol } })}
+              style={{
+                padding: '10px 20px',
+                background: 'rgba(93, 169, 255, 0.2)',
+                border: '1px solid rgba(93, 169, 255, 0.3)',
+                borderRadius: 10,
+                color: '#5da9ff',
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 600,
+                transition: 'all 0.2s ease'
+              }}
+            >
+              ← Back to Custom Bot
+            </button>
+            
+            <h1 style={{ margin: 0, fontSize: 24, color: '#5da9ff', fontWeight: 700 }}>
               📈 {symbol} Backtesting
             </h1>
-            <p style={{ color: '#9aa1aa', margin: 0, fontSize: 16, marginTop: 8 }}>
-              {backtestConfig.startDate} to {backtestConfig.endDate} • ${backtestConfig.initialCapital} Initial Capital
-            </p>
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 16 }}>
+            
+            <div style={{ display: 'flex', gap: 12 }}>
               <button
                 onClick={() => setShowDatePrompt(true)}
                 style={{
@@ -371,204 +413,120 @@ export default function Backtesting() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+          {/* Main Content Area */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
             
-            {/* Left Side: Calendar P&L */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-              {/* Calendar P&L Section */}
-              <div style={{ 
-                padding: 20,
-                background: 'rgba(0, 0, 0, 0.8)',
-                border: '1px solid rgba(93, 169, 255, 0.3)',
-                borderRadius: 16,
-                backdropFilter: 'blur(10px)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
-              }}>
-                <h3 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 20, fontWeight: 600 }}>
-                  📅 Calendar P&L Analysis
+            {/* Live Graph */}
+            <div style={{ 
+              padding: 20,
+              background: 'rgba(0, 0, 0, 0.8)',
+              border: '1px solid rgba(93, 169, 255, 0.3)',
+              borderRadius: 16,
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <h3 style={{ margin: 0, color: '#5da9ff', fontSize: 20, fontWeight: 600 }}>
+                  📈 Live {symbol} Chart
                 </h3>
-                
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: monthlyPnL.length <= 12 ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
-                  gap: 16,
-                  marginBottom: 20
-                }}>
-                  {Array.from({ length: monthlyPnL.length <= 12 ? 12 : 18 }).map((_, index) => {
-                    const monthData = monthlyPnL[index];
-                    const isEmpty = !monthData;
-                    
-                    return (
-                      <div 
-                        key={index} 
-                        style={{ 
-                          padding: 16,
-                          background: isEmpty ? 'rgba(255, 255, 255, 0.02)' : 'rgba(93, 169, 255, 0.1)',
-                          border: isEmpty ? '1px dashed rgba(255, 255, 255, 0.1)' : '1px solid rgba(93, 169, 255, 0.3)',
-                          borderRadius: 12,
-                          minHeight: 200,
-                          opacity: isEmpty ? 0.5 : 1,
-                          backdropFilter: 'blur(5px)'
-                        }}
-                      >
-                        {isEmpty ? (
-                          <div style={{ 
-                            textAlign: 'center', 
-                            color: '#666', 
-                            fontSize: 14,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            height: '100%'
-                          }}>
-                            <div>
-                              <div style={{ fontSize: 24, marginBottom: 8 }}>📅</div>
-                              <div>Empty</div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div>
-                            <div style={{ 
-                              fontSize: 16, 
-                              fontWeight: 'bold', 
-                              color: '#5da9ff', 
-                              marginBottom: 12,
-                              textAlign: 'center'
-                            }}>
-                              {monthData.monthName}
-                            </div>
-                            
-                            <div style={{ 
-                              fontSize: 24, 
-                              fontWeight: 'bold', 
-                              color: monthData.pnl >= 0 ? '#7ef0a2' : '#ff6b6b',
-                              marginBottom: 16,
-                              textAlign: 'center'
-                            }}>
-                              {monthData.pnl >= 0 ? '+' : ''}${monthData.pnl.toFixed(2)}
-                            </div>
-                            
-                            <div style={{ 
-                              fontSize: 12, 
-                              color: '#9aa1aa', 
-                              marginBottom: 12,
-                              textAlign: 'center'
-                            }}>
-                              Total Days: {monthData.days.length}
-                            </div>
-                            
-                            <div style={{ 
-                              display: 'grid', 
-                              gridTemplateColumns: 'repeat(7, 1fr)', 
-                              gap: 2,
-                              fontSize: 10,
-                              color: '#9aa1aa'
-                            }}>
-                              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                                <div key={i} style={{ textAlign: 'center', fontWeight: 'bold' }}>
-                                  {day}
-                                </div>
-                              ))}
-                              
-                              {/* Calendar days */}
-                              {Array.from({ length: 35 }).map((_, dayIndex) => {
-                                const dayData = monthData.days.find(d => d.day === dayIndex + 1);
-                                const hasData = dayData !== undefined;
-                                
-                                return (
-                                  <div
-                                    key={dayIndex}
-                                    style={{
-                                      textAlign: 'center',
-                                      padding: '4px 2px',
-                                      borderRadius: 4,
-                                      background: hasData ? (
-                                        dayData.pnl >= 0 ? 'rgba(126, 240, 162, 0.2)' : 'rgba(255, 107, 107, 0.2)'
-                                      ) : 'transparent',
-                                      color: hasData ? (
-                                        dayData.pnl >= 0 ? '#7ef0a2' : '#ff6b6b'
-                                      ) : '#666',
-                                      fontSize: 11,
-                                      fontWeight: hasData ? 'bold' : 'normal',
-                                      border: hasData ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'
-                                    }}
-                                    title={hasData ? `P&L: $${dayData.pnl.toFixed(2)}` : 'No data'}
-                                  >
-                                    {dayIndex < monthData.days.length ? dayIndex + 1 : ''}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                
-                {/* Summary Stats */}
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(3, 1fr)', 
-                  gap: 16,
-                  padding: 16,
-                  background: 'rgba(93, 169, 255, 0.05)',
-                  borderRadius: 12,
-                  border: '1px solid rgba(93, 169, 255, 0.2)'
-                }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 14, color: '#9aa1aa', marginBottom: 4 }}>
-                      Total Period P&L
-                    </div>
-                    <div style={{ 
-                      fontSize: 20, 
-                      fontWeight: 'bold', 
-                      color: monthlyPnL.reduce((sum, m) => sum + m.pnl, 0) >= 0 ? '#7ef0a2' : '#ff6b6b' 
-                    }}>
-                      ${monthlyPnL.reduce((sum, m) => sum + m.pnl, 0).toFixed(2)}
-                    </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: 24, fontWeight: 'bold', color: livePrice >= 60000 ? '#7ef0a2' : '#ff6b6b' }}>
+                    ${livePrice.toFixed(2)}
                   </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 14, color: '#9aa1aa', marginBottom: 4 }}>
-                      Average Monthly P&L
-                    </div>
-                    <div style={{ 
-                      fontSize: 20, 
-                      fontWeight: 'bold', 
-                      color: '#5da9ff' 
-                    }}>
-                      ${(monthlyPnL.reduce((sum, m) => sum + m.pnl, 0) / monthlyPnL.length).toFixed(2)}
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 14, color: '#9aa1aa', marginBottom: 4 }}>
-                      Profitable Months
-                    </div>
-                    <div style={{ 
-                      fontSize: 20, 
-                      fontWeight: 'bold', 
-                      color: '#5da9ff' 
-                    }}>
-                      {monthlyPnL.filter(m => m.pnl >= 0).length}/{monthlyPnL.length}
-                    </div>
+                  <div style={{ fontSize: 12, color: '#9aa1aa' }}>
+                    {livePrice >= 60000 ? '+' : ''}{((livePrice - 60000) / 60000 * 100).toFixed(2)}%
                   </div>
                 </div>
               </div>
-
-              {/* Results Panel */}
-              {results && (
-                <div style={{ 
-                  padding: 20,
-                  background: 'rgba(0, 0, 0, 0.8)',
-                  border: '1px solid rgba(93, 169, 255, 0.3)',
-                  borderRadius: 16,
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
-                }}>
-                  <h3 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 20, fontWeight: 600 }}>
-                    📊 Backtest Results
-                  </h3>
+              
+              <div style={{ 
+                height: 400,
+                background: 'rgba(0, 0, 0, 0.3)',
+                borderRadius: 12,
+                padding: 16,
+                position: 'relative'
+              }}>
+                {/* Simple SVG Chart */}
+                <svg width="100%" height="100%" viewBox="0 0 800 400">
+                  {/* Grid Lines */}
+                  {[...Array(9)].map((_, i) => (
+                    <line
+                      key={`h-${i}`}
+                      x1="0"
+                      y1={i * 50}
+                      x2="800"
+                      y2={i * 50}
+                      stroke="rgba(255, 255, 255, 0.1)"
+                      strokeWidth="1"
+                    />
+                  ))}
                   
+                  {/* Price Line */}
+                  <polyline
+                    points={chartData.map((point, i) => `${(i / chartData.length) * 800},${400 - (point.price / 70000) * 350}`).join(' ')}
+                    fill="none"
+                    stroke="#5da9ff"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  
+                  {/* Data Points */}
+                  {chartData.map((point, i) => (
+                    <circle
+                      key={i}
+                      cx={(i / chartData.length) * 800}
+                      cy={400 - (point.price / 70000) * 350}
+                      r="4"
+                      fill="#5da9ff"
+                      stroke="rgba(255, 255, 255, 0.8)"
+                      strokeWidth="2"
+                    />
+                  ))}
+                </svg>
+                
+                {/* Live Indicator */}
+                <div style={{
+                  position: 'absolute',
+                  top: 16,
+                  left: 16,
+                  background: 'rgba(0, 0, 0, 0.8)',
+                  padding: '8px 12px',
+                  borderRadius: 8,
+                  fontSize: 12,
+                  color: '#9aa1aa',
+                  border: '1px solid rgba(93, 169, 255, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8
+                }}>
+                  <div style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    background: '#7ef0a2',
+                    animation: 'pulse 2s infinite'
+                  }}></div>
+                  LIVE
+                </div>
+              </div>
+            </div>
+
+            {/* P&L Dashboard */}
+            <div style={{ 
+              padding: 20,
+              background: 'rgba(0, 0, 0, 0.8)',
+              border: '1px solid rgba(93, 169, 255, 0.3)',
+              borderRadius: 16,
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
+            }}>
+              <h3 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 20, fontWeight: 600 }}>
+                💰 P&L Dashboard
+              </h3>
+              
+              {results ? (
+                <div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
                     <div style={{ textAlign: 'center', padding: 16, background: 'rgba(93, 169, 255, 0.1)', borderRadius: 12 }}>
                       <div style={{ fontSize: 28, fontWeight: 'bold', color: '#5da9ff', marginBottom: 8 }}>
@@ -583,9 +541,9 @@ export default function Backtesting() {
                         color: results.profitLoss >= 0 ? '#7ef0a2' : '#ff6b6b', 
                         marginBottom: 8 
                       }}>
-                        {results.profitLoss >= 0 ? '+' : ''}{results.profitLoss?.toFixed(2)}
+                        {results.profitLoss >= 0 ? '+' : ''}${results.profitLoss?.toFixed(2)}
                       </div>
-                      <div style={{ fontSize: 14, color: '#9aa1aa' }}>Profit/Loss</div>
+                      <div style={{ fontSize: 14, color: '#9aa1aa' }}>Total P&L</div>
                     </div>
                   </div>
 
@@ -602,15 +560,15 @@ export default function Backtesting() {
                       </div>
                       <div style={{ fontSize: 14, color: '#9aa1aa' }}>Win Rate</div>
                     </div>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
                     <div style={{ textAlign: 'center', padding: 16, background: 'rgba(93, 169, 255, 0.1)', borderRadius: 12 }}>
                       <div style={{ fontSize: 24, fontWeight: 'bold', color: '#5da9ff', marginBottom: 8 }}>
                         {results.totalTrades}
                       </div>
                       <div style={{ fontSize: 14, color: '#9aa1aa' }}>Total Trades</div>
                     </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <div style={{ textAlign: 'center', padding: 16, background: 'rgba(93, 169, 255, 0.1)', borderRadius: 12 }}>
                       <div style={{ fontSize: 24, fontWeight: 'bold', color: '#ff6b6b', marginBottom: 8 }}>
                         {results.maxDrawdown?.toFixed(2)}%
@@ -625,171 +583,222 @@ export default function Backtesting() {
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
-
-            {/* Right Side: Chart */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-              <div style={{ 
-                padding: 20,
-                flex: 1,
-                background: 'rgba(0, 0, 0, 0.8)',
-                border: '1px solid rgba(93, 169, 255, 0.3)',
-                borderRadius: 16,
-                backdropFilter: 'blur(10px)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
-              }}>
-                <h3 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 20, fontWeight: 600 }}>
-                  📈 Price Chart
-                </h3>
+              ) : (
                 <div style={{ 
                   height: 400,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   background: 'rgba(0, 0, 0, 0.3)',
                   borderRadius: 12,
-                  padding: 16,
-                  position: 'relative'
+                  textAlign: 'center'
                 }}>
-                  {/* Simple SVG Chart */}
-                  <svg width="100%" height="100%" viewBox="0 0 800 400">
-                    {/* Grid Lines */}
-                    {[...Array(9)].map((_, i) => (
-                      <line
-                        key={`h-${i}`}
-                        x1="0"
-                        y1={i * 50}
-                        x2="800"
-                        y2={i * 50}
-                        stroke="rgba(255, 255, 255, 0.1)"
-                        strokeWidth="1"
-                      />
-                    ))}
-                    
-                    {/* Price Line */}
-                    <polyline
-                      points={chartData.map((point, i) => `${(i / chartData.length) * 800},${400 - (point.price / 70000) * 350}`).join(' ')}
-                      fill="none"
-                      stroke="#5da9ff"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    
-                    {/* Data Points */}
-                    {chartData.map((point, i) => (
-                      <circle
-                        key={i}
-                        cx={(i / chartData.length) * 800}
-                        cy={400 - (point.price / 70000) * 350}
-                        r="4"
-                        fill="#5da9ff"
-                        stroke="rgba(255, 255, 255, 0.8)"
-                        strokeWidth="2"
-                      />
-                    ))}
-                  </svg>
-                  
-                  {/* Chart Legend */}
-                  <div style={{
-                    position: 'absolute',
-                    top: 16,
-                    right: 16,
-                    background: 'rgba(0, 0, 0, 0.8)',
-                    padding: '8px 12px',
-                    borderRadius: 8,
-                    fontSize: 12,
-                    color: '#9aa1aa',
-                    border: '1px solid rgba(93, 169, 255, 0.2)'
-                  }}>
-                    <div style={{ marginBottom: 4 }}>
-                      <strong>Current Pair:</strong> {symbol}
+                  <div>
+                    <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
+                    <div style={{ fontSize: 18, color: '#9aa1aa', marginBottom: 8 }}>
+                      No backtest results yet
                     </div>
-                    <div style={{ marginBottom: 4 }}>
-                      <strong>Period:</strong> {backtestConfig.startDate} to {backtestConfig.endDate}
+                    <div style={{ fontSize: 14, color: '#666' }}>
+                      Click "Run Backtest" to see P&L analysis
                     </div>
-                    <div>
-                      <strong>Price Range:</strong> ${Math.min(...chartData.map(d => d.price)).toFixed(2)} - ${Math.max(...chartData.map(d => d.price)).toFixed(2)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Trade History */}
-              {results && results.trades && (
-                <div style={{ 
-                  padding: 20,
-                  background: 'rgba(0, 0, 0, 0.8)',
-                  border: '1px solid rgba(93, 169, 255, 0.3)',
-                  borderRadius: 16,
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
-                }}>
-                  <h3 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 20, fontWeight: 600 }}>
-                    📋 Recent Trades
-                  </h3>
-                  <div style={{ 
-                    maxHeight: 300,
-                    overflowY: 'auto',
-                    background: 'rgba(0, 0, 0, 0.3)',
-                    borderRadius: 12,
-                    padding: 16
-                  }}>
-                    {results.trades.map((trade, i) => (
-                      <div key={i} style={{ 
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '12px 16px',
-                        marginBottom: 8,
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        borderRadius: 8,
-                        borderLeft: `4px solid ${trade.side === 'buy' ? '#7ef0a2' : '#ff6b6b'}`
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <span style={{ 
-                            fontSize: 14,
-                            fontWeight: 'bold',
-                            color: trade.side === 'buy' ? '#7ef0a2' : '#ff6b6b'
-                          }}>
-                            {trade.side.toUpperCase()}
-                          </span>
-                          <span style={{ fontSize: 12, color: '#9aa1aa' }}>
-                            {trade.reason}
-                          </span>
-                        </div>
-                        <div style={{ fontSize: 14, color: '#cfd3d8' }}>
-                          ${trade.price?.toFixed(2)}
-                        </div>
-                      </div>
-                    ))}
                   </div>
                 </div>
               )}
             </div>
           </div>
+
+          {/* Calendar Section */}
+          <div style={{ 
+            padding: 20,
+            background: 'rgba(0, 0, 0, 0.8)',
+            border: '1px solid rgba(93, 169, 255, 0.3)',
+            borderRadius: 16,
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
+          }}>
+            <h3 style={{ margin: 0, marginBottom: 20, color: '#5da9ff', fontSize: 20, fontWeight: 600 }}>
+              📅 Calendar P&L Analysis ({layout.cols}×{layout.rows} Layout)
+            </h3>
+            
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: `repeat(${layout.cols}, 1fr)`,
+              gap: 16
+            }}>
+              {Array.from({ length: layout.cols * layout.rows }).map((_, index) => {
+                const monthData = monthlyPnL[index];
+                const isEmpty = !monthData;
+                
+                return (
+                  <div 
+                    key={index} 
+                    style={{ 
+                      padding: 16,
+                      background: isEmpty ? 'rgba(255, 255, 255, 0.02)' : 'rgba(93, 169, 255, 0.1)',
+                      border: isEmpty ? '1px dashed rgba(255, 255, 255, 0.1)' : '1px solid rgba(93, 169, 255, 0.3)',
+                      borderRadius: 12,
+                      minHeight: 180,
+                      opacity: isEmpty ? 0.5 : 1,
+                      backdropFilter: 'blur(5px)'
+                    }}
+                  >
+                    {isEmpty ? (
+                      <div style={{ 
+                        textAlign: 'center', 
+                        color: '#666', 
+                        fontSize: 14,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: '100%'
+                      }}>
+                        <div>
+                          <div style={{ fontSize: 20, marginBottom: 4 }}>📅</div>
+                          <div>Empty</div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div style={{ 
+                          fontSize: 14, 
+                          fontWeight: 'bold', 
+                          color: '#5da9ff', 
+                          marginBottom: 8,
+                          textAlign: 'center'
+                        }}>
+                          {monthData.monthName}
+                        </div>
+                        
+                        <div style={{ 
+                          fontSize: 20, 
+                          fontWeight: 'bold', 
+                          color: monthData.pnl >= 0 ? '#7ef0a2' : '#ff6b6b',
+                          marginBottom: 12,
+                          textAlign: 'center'
+                        }}>
+                          {monthData.pnl >= 0 ? '+' : ''}${monthData.pnl.toFixed(2)}
+                        </div>
+                        
+                        <div style={{ 
+                          fontSize: 10, 
+                          color: '#9aa1aa', 
+                          marginBottom: 8,
+                          textAlign: 'center'
+                        }}>
+                          {monthData.days.length} days
+                        </div>
+                        
+                        <div style={{ 
+                          display: 'grid', 
+                          gridTemplateColumns: 'repeat(7, 1fr)', 
+                          gap: 1,
+                          fontSize: 8,
+                          color: '#9aa1aa'
+                        }}>
+                          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                            <div key={i} style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                              {day}
+                            </div>
+                          ))}
+                          
+                          {/* Calendar days - compact version */}
+                          {Array.from({ length: 35 }).map((_, dayIndex) => {
+                            const dayData = monthData.days.find(d => d.day === dayIndex + 1);
+                            const hasData = dayData !== undefined;
+                            
+                            return (
+                              <div
+                                key={dayIndex}
+                                style={{
+                                  textAlign: 'center',
+                                  padding: '2px 1px',
+                                  borderRadius: 2,
+                                  background: hasData ? (
+                                    dayData.pnl >= 0 ? 'rgba(126, 240, 162, 0.2)' : 'rgba(255, 107, 107, 0.2)'
+                                  ) : 'transparent',
+                                  color: hasData ? (
+                                    dayData.pnl >= 0 ? '#7ef0a2' : '#ff6b6b'
+                                  ) : '#666',
+                                  fontSize: 9,
+                                  fontWeight: hasData ? 'bold' : 'normal'
+                                }}
+                                title={hasData ? `P&L: $${dayData.pnl.toFixed(2)}` : 'No data'}
+                              >
+                                {dayIndex < monthData.days.length ? dayIndex + 1 : ''}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* Summary Stats */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(4, 1fr)', 
+              gap: 16,
+              marginTop: 20,
+              padding: 16,
+              background: 'rgba(93, 169, 255, 0.05)',
+              borderRadius: 12,
+              border: '1px solid rgba(93, 169, 255, 0.2)'
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 14, color: '#9aa1aa', marginBottom: 4 }}>
+                  Total Period P&L
+                </div>
+                <div style={{ 
+                  fontSize: 18, 
+                  fontWeight: 'bold', 
+                  color: monthlyPnL.reduce((sum, m) => sum + m.pnl, 0) >= 0 ? '#7ef0a2' : '#ff6b6b' 
+                }}>
+                  ${monthlyPnL.reduce((sum, m) => sum + m.pnl, 0).toFixed(2)}
+                </div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 14, color: '#9aa1aa', marginBottom: 4 }}>
+                  Average Monthly P&L
+                </div>
+                <div style={{ 
+                  fontSize: 18, 
+                  fontWeight: 'bold', 
+                  color: '#5da9ff' 
+                }}>
+                  ${(monthlyPnL.reduce((sum, m) => sum + m.pnl, 0) / monthlyPnL.length).toFixed(2)}
+                </div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 14, color: '#9aa1aa', marginBottom: 4 }}>
+                  Profitable Months
+                </div>
+                <div style={{ 
+                  fontSize: 18, 
+                  fontWeight: 'bold', 
+                  color: '#5da9ff' 
+                }}>
+                  {monthlyPnL.filter(m => m.pnl >= 0).length}/{monthlyPnL.length}
+                </div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 14, color: '#9aa1aa', marginBottom: 4 }}>
+                  Period Length
+                </div>
+                <div style={{ 
+                  fontSize: 18, 
+                  fontWeight: 'bold', 
+                  color: '#5da9ff' 
+                }}>
+                  {monthlyPnL.length} months
+                </div>
+              </div>
+            </div>
+          </div>
         </>
       )}
-
-      {/* Navigation */}
-      <div style={{ position: 'fixed', bottom: 24, right: 24 }}>
-        <button
-          onClick={() => navigate('/custom-bot', { state: { symbol: symbol } })}
-          style={{
-            padding: '12px 24px',
-            background: 'rgba(93, 169, 255, 0.2)',
-            border: '1px solid rgba(93, 169, 255, 0.3)',
-            borderRadius: 10,
-            color: '#5da9ff',
-            cursor: 'pointer',
-            fontSize: 14,
-            fontWeight: 600,
-            transition: 'all 0.2s ease',
-            backdropFilter: 'blur(10px)',
-            boxShadow: '0 4px 12px rgba(93, 169, 255, 0.3)'
-          }}
-        >
-          ← Back to Custom Bot
-        </button>
-      </div>
     </div>
   );
 }
