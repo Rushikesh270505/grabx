@@ -151,11 +151,22 @@ export default function Backtesting() {
         setBacktestProgress(progress);
         
         // Check if we completed a month
-        const currentMonthData = monthlyPnL[processedMonths];
-        if (currentMonthData && processedDays >= currentMonthData.days.length + (processedMonths > 0 ? monthlyPnL[processedMonths - 1].days.length : 0)) {
-          setCurrentMonthIndex(processedMonths);
-          setFlippedMonths(prev => new Set([...prev, processedMonths]));
-          processedMonths++;
+        const currentDayData = dailyPnL[processedDays - 1];
+        if (currentDayData) {
+          const monthIndex = monthlyPnL.findIndex(m => 
+            m.month === currentDayData.month && m.year === currentDayData.year
+          );
+          
+          if (monthIndex !== -1 && !flippedMonths.has(monthIndex)) {
+            // Check if this is the last day of the month
+            const monthDays = monthlyPnL[monthIndex].days;
+            const lastDayOfMonth = monthDays[monthDays.length - 1];
+            
+            if (currentDayData.day === lastDayOfMonth.day) {
+              setCurrentMonthIndex(monthIndex);
+              setFlippedMonths(prev => new Set([...prev, monthIndex]));
+            }
+          }
         }
         
         // Update live price
@@ -980,9 +991,7 @@ export default function Backtesting() {
                               {Array.from({ length: 35 }).map((_, dayIndex) => {
                                 const dayData = monthData.days.find(d => d.day === dayIndex + 1);
                                 const hasData = dayData !== undefined;
-                                const isProcessed = dayIndex < currentDayIndex && dailyPnL[currentDayIndex - 1] && 
-                                                  dailyPnL[currentDayIndex - 1].month === monthData.month && 
-                                                  dailyPnL[currentDayIndex - 1].year === monthData.year;
+                                const isProcessed = dayIndex < currentDayIndex;
                                 
                                 if (dayIndex < monthData.days.length) {
                                   return (
