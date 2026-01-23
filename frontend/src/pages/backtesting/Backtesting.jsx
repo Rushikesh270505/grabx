@@ -133,11 +133,12 @@ export default function Backtesting() {
   // Calculate calendar grid layout
   const getCalendarLayout = () => {
     const monthCount = monthlyPnL.length;
-    if (monthCount <= 6) return { cols: 6, rows: 1 };
-    if (monthCount <= 12) return { cols: 6, rows: 2 };
-    if (monthCount <= 18) return { cols: 6, rows: 3 };
-    if (monthCount <= 24) return { cols: 6, rows: 4 };
-    return { cols: 6, rows: Math.ceil(monthCount / 6) };
+    if (monthCount <= 4) return { cols: 4, rows: 1 };
+    if (monthCount <= 8) return { cols: 4, rows: 2 };
+    if (monthCount <= 12) return { cols: 4, rows: 3 };
+    if (monthCount <= 16) return { cols: 4, rows: 4 };
+    if (monthCount <= 20) return { cols: 4, rows: 5 };
+    return { cols: 4, rows: Math.ceil(monthCount / 4) };
   };
 
   const layout = getCalendarLayout();
