@@ -270,77 +270,82 @@ export default function Backtesting() {
               </select>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
-              <div>
-                <label style={{ color: '#cfd3d8', fontSize: 16, fontWeight: 600, display: 'block', marginBottom: 12 }}>
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  value={backtestConfig.startDate}
-                  onChange={(e) => setBacktestConfig({...backtestConfig, startDate: e.target.value})}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: 8,
-                    background: 'rgba(0, 0, 0, 0.5)',
-                    border: '1px solid rgba(93, 169, 255, 0.3)',
-                    color: '#fff',
-                    fontSize: 16,
-                    transition: 'all 0.2s ease'
-                  }}
-                />
-              </div>
-              <div>
-                <label style={{ color: '#cfd3d8', fontSize: 16, fontWeight: 600, display: 'block', marginBottom: 12 }}>
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  value={backtestConfig.endDate}
-                  onChange={(e) => setBacktestConfig({...backtestConfig, endDate: e.target.value})}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: 8,
-                    background: 'rgba(0, 0, 0, 0.5)',
-                    border: '1px solid rgba(93, 169, 255, 0.3)',
-                    color: '#fff',
-                    fontSize: 16,
-                    transition: 'all 0.2s ease'
-                  }}
-                />
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ color: '#cfd3d8', fontSize: 16, fontWeight: 600, display: 'block', marginBottom: 12 }}>
+                Select Backtesting Period
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                <div>
+                  <label style={{ color: '#9aa1aa', fontSize: 14, fontWeight: 500, display: 'block', marginBottom: 8 }}>
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={backtestConfig.startDate}
+                    onChange={(e) => setBacktestConfig({...backtestConfig, startDate: e.target.value})}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: 8,
+                      background: 'rgba(0, 0, 0, 0.5)',
+                      border: '1px solid rgba(93, 169, 255, 0.3)',
+                      color: '#fff',
+                      fontSize: 16,
+                      transition: 'all 0.2s ease'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ color: '#9aa1aa', fontSize: 14, fontWeight: 500, display: 'block', marginBottom: 8 }}>
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    value={backtestConfig.endDate}
+                    onChange={(e) => setBacktestConfig({...backtestConfig, endDate: e.target.value})}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: 8,
+                      background: 'rgba(0, 0, 0, 0.5)',
+                      border: '1px solid rgba(93, 169, 255, 0.3)',
+                      color: '#fff',
+                      fontSize: 16,
+                      transition: 'all 0.2s ease'
+                    }}
+                  />
+                </div>
               </div>
             </div>
 
             {/* Calendar Preview */}
             <div style={{ marginBottom: 24 }}>
-              <label style={{ color: '#cfd3d8', fontSize: 16, fontWeight: 600, display: 'block', marginBottom: 12 }}>
-                Selected Period Overview
-              </label>
               <div style={{ 
                 padding: 16,
-                background: 'rgba(0, 0, 0, 0.5)',
+                background: 'rgba(93, 169, 255, 0.1)',
                 border: '1px solid rgba(93, 169, 255, 0.3)',
                 borderRadius: 12,
                 color: '#9aa1aa',
                 fontSize: 14,
                 textAlign: 'center'
               }}>
+                <div style={{ marginBottom: 8, fontSize: 16, fontWeight: 600, color: '#5da9ff' }}>
+                  📅 Selected Period Overview
+                </div>
                 <div style={{ marginBottom: 8 }}>
                   <strong>Start:</strong> {new Date(backtestConfig.startDate).toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
+                    weekday: 'short', 
+                    month: 'short', 
+                    day: 'numeric',
+                    year: 'numeric'
                   })}
                 </div>
                 <div style={{ marginBottom: 8 }}>
                   <strong>End:</strong> {new Date(backtestConfig.endDate).toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
+                    weekday: 'short', 
+                    month: 'short', 
+                    day: 'numeric',
+                    year: 'numeric'
                   })}
                 </div>
                 <div>
