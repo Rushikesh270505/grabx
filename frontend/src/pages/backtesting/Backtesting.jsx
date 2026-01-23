@@ -766,6 +766,20 @@ export default function Backtesting() {
               📅 Calendar P&L Analysis
             </h3>
             
+            {/* Debug Info */}
+            {isRunning && (
+              <div style={{ 
+                marginBottom: 16,
+                padding: 8,
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 8,
+                fontSize: 12,
+                color: '#9aa1aa'
+              }}>
+                Debug: Current Day: {currentDayIndex}, Flipped Months: [{Array.from(flippedMonths).join(', ')}], Total Months: {monthlyPnL.length}
+              </div>
+            )}
+            
             <style>{`
               * {
                 box-sizing: border-box;
