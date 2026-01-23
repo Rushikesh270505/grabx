@@ -1054,32 +1054,56 @@ export default function Backtesting() {
                               <span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
                             </div>
                             <div className="calendar-days">
-                              {Array.from({ length: 35 }).map((_, dayIndex) => {
-                                const dayData = monthData.days.find(d => d.day === dayIndex + 1);
-                                const hasData = dayData !== undefined;
-                                const isProcessed = dayIndex < currentDayIndex;
+                              {(() => {
+                                // Get the first day of the month
+                                const firstDay = new Date(monthData.year, monthData.month, 1);
+                                const startDayOfWeek = firstDay.getDay(); // 0 = Sunday, 1 = Monday, etc.
+                                const daysInMonth = new Date(monthData.year, monthData.month + 1, 0).getDate();
                                 
-                                if (dayIndex < monthData.days.length) {
+                                // Create calendar array with empty cells for days before month starts
+                                const calendarDays = [];
+                                
+                                // Add empty cells for days before month starts
+                                for (let i = 0; i < startDayOfWeek; i++) {
+                                  calendarDays.push(null);
+                                }
+                                
+                                // Add all days of the month
+                                for (let day = 1; day <= daysInMonth; day++) {
+                                  calendarDays.push(day);
+                                }
+                                
+                                return calendarDays.map((day, calendarIndex) => {
+                                  if (day === null) {
+                                    // Empty cell for days before month starts
+                                    return (
+                                      <div key={`empty-${calendarIndex}`} className="calendar-day empty">
+                                        <span className="date"></span>
+                                        <span className="pnl">—</span>
+                                      </div>
+                                    );
+                                  }
+                                  
+                                  const dayData = monthData.days.find(d => d.day === day);
+                                  const hasData = dayData !== undefined;
+                                  const dayOverallIndex = dailyPnL.findIndex(d => 
+                                    d.date === `${monthData.year}-${String(monthData.month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+                                  );
+                                  const isProcessed = dayOverallIndex !== -1 && dayOverallIndex < currentDayIndex;
+                                  
                                   return (
                                     <div 
-                                      key={dayIndex} 
+                                      key={day} 
                                       className={`calendar-day ${hasData && isProcessed ? (dayData.pnl >= 0 ? 'profit' : 'loss') : ''}`}
                                     >
-                                      <span className="date">{dayIndex + 1}</span>
+                                      <span className="date">{day}</span>
                                       <span className="pnl">
                                         {hasData && isProcessed ? (dayData.pnl >= 0 ? `+$${dayData.pnl.toFixed(0)}` : `-$${Math.abs(dayData.pnl).toFixed(0)}`) : '—'}
                                       </span>
                                     </div>
                                   );
-                                } else {
-                                  return (
-                                    <div key={dayIndex} className="calendar-day empty">
-                                      <span className="date"></span>
-                                      <span className="pnl">—</span>
-                                    </div>
-                                  );
-                                }
-                              })}
+                                });
+                              })()}
                             </div>
                           </div>
                         </div>
