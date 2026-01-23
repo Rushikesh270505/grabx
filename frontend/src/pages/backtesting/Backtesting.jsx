@@ -150,7 +150,7 @@ export default function Backtesting() {
         const progress = (processedDays / totalDays) * 100;
         setBacktestProgress(progress);
         
-        // Check if we completed a month
+        // Check if we need to flip a calendar
         const currentDayData = dailyPnL[processedDays - 1];
         if (currentDayData) {
           const monthIndex = monthlyPnL.findIndex(m => 
@@ -158,11 +158,25 @@ export default function Backtesting() {
           );
           
           if (monthIndex !== -1 && !flippedMonths.has(monthIndex)) {
-            // Always flip the first month immediately when backtesting starts
-            if (processedDays === 1 || currentDayData.day === monthlyPnL[monthIndex].days.length) {
-              console.log(`Flipping month ${monthIndex}, day ${currentDayData.day}`);
-              setCurrentMonthIndex(monthIndex);
-              setFlippedMonths(prev => new Set([...prev, monthIndex]));
+            // Flip immediately when we start processing any day in this month
+            console.log(`Flipping month ${monthIndex} (${monthlyPnL[monthIndex].monthName}) on day ${currentDayData.day}`);
+            setCurrentMonthIndex(monthIndex);
+            setFlippedMonths(prev => new Set([...prev, monthIndex]));
+          }
+          
+          // Check if we're moving to a new month and flip it immediately
+          if (processedDays < totalDays) {
+            const nextDayData = dailyPnL[processedDays];
+            if (nextDayData) {
+              const nextMonthIndex = monthlyPnL.findIndex(m => 
+                m.month === nextDayData.month && m.year === nextDayData.year
+              );
+              
+              if (nextMonthIndex !== -1 && nextMonthIndex !== monthIndex && !flippedMonths.has(nextMonthIndex)) {
+                console.log(`Flipping next month ${nextMonthIndex} (${monthlyPnL[nextMonthIndex].monthName}) immediately`);
+                setCurrentMonthIndex(nextMonthIndex);
+                setFlippedMonths(prev => new Set([...prev, nextMonthIndex]));
+              }
             }
           }
         }
@@ -527,34 +541,61 @@ export default function Backtesting() {
           {isRunning && (
             <div style={{ 
               marginBottom: 24,
-              padding: '16px 24px',
+              padding: '20px 24px',
               background: 'rgba(0, 0, 0, 0.8)',
               border: '1px solid rgba(93, 169, 255, 0.3)',
               borderRadius: 16,
               backdropFilter: 'blur(10px)',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <h4 style={{ margin: 0, color: '#5da9ff', fontSize: 16, fontWeight: 600 }}>
-                  🔄 Backtesting Progress
-                </h4>
-                <span style={{ color: '#9aa1aa', fontSize: 14 }}>
-                  Day {currentDayIndex + 1} of {dailyPnL.length} • {backtestProgress.toFixed(1)}%
-                </span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: '50%',
+                    background: '#7ef0a2',
+                    animation: 'pulse 2s infinite'
+                  }}></div>
+                  <h4 style={{ margin: 0, color: '#5da9ff', fontSize: 18, fontWeight: 600 }}>
+                    🔄 Live Backtesting in Progress
+                  </h4>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ color: '#7ef0a2', fontSize: 16, fontWeight: 600 }}>
+                    Day {currentDayIndex + 1} of {dailyPnL.length}
+                  </div>
+                  <div style={{ color: '#9aa1aa', fontSize: 14 }}>
+                    {backtestProgress.toFixed(1)}% Complete
+                  </div>
+                </div>
               </div>
               <div style={{ 
-                height: 8, 
+                height: 12, 
                 background: 'rgba(255, 255, 255, 0.1)', 
-                borderRadius: 4,
-                overflow: 'hidden'
+                borderRadius: 6,
+                overflow: 'hidden',
+                position: 'relative'
               }}>
                 <div style={{
                   height: '100%',
                   width: `${backtestProgress}%`,
                   background: 'linear-gradient(90deg, #5da9ff, #7ef0a2)',
-                  borderRadius: 4,
-                  transition: 'width 0.3s ease'
-                }}></div>
+                  borderRadius: 6,
+                  transition: 'width 0.3s ease',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                    animation: 'shimmer 2s infinite'
+                  }}></div>
+                </div>
               </div>
             </div>
           )}
@@ -786,6 +827,16 @@ export default function Backtesting() {
                 font-family: system-ui, sans-serif;
               }
               
+              @keyframes shimmer {
+                0% { transform: translateX(-100%); }
+                100% { transform: translateX(100%); }
+              }
+              
+              @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
+              }
+              
               .calendar-scene {
                 perspective: 1400px;
               }
@@ -918,6 +969,7 @@ export default function Backtesting() {
                 border-radius: 10px;
                 background: rgba(255,255,255,0.04);
                 backdrop-filter: blur(4px);
+                transition: all 0.2s ease;
               }
               
               .calendar-day.empty {
@@ -936,6 +988,7 @@ export default function Backtesting() {
               
               .calendar-day.profit {
                 background: rgba(34,197,94,0.12);
+                transform: scale(1.05);
               }
               
               .calendar-day.profit .pnl {
@@ -944,6 +997,7 @@ export default function Backtesting() {
               
               .calendar-day.loss {
                 background: rgba(239,68,68,0.12);
+                transform: scale(1.05);
               }
               
               .calendar-day.loss .pnl {
