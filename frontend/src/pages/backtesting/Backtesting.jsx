@@ -842,8 +842,8 @@ export default function Backtesting() {
               }
               
               .calendar-board {
-                width: 380px;
-                height: 350px;
+                width: 360px;
+                height: 360px;
                 position: relative;
                 transform-style: preserve-3d;
                 transition: transform 0.9s cubic-bezier(.2,.7,.2,1);
@@ -1008,8 +1008,8 @@ export default function Backtesting() {
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: `repeat(${layout.cols}, 1fr)`,
-              gap: '40px', // uniform gap for both rows and columns
-              padding: '40px', // equal padding on all sides
+              gap: '45px', // increased gap for better visual separation
+              padding: '45px', // equal padding on all sides
               justifyContent: 'center', // center the entire grid
               alignItems: 'center'
             }}>
