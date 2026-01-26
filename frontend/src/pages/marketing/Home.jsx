@@ -1,177 +1,232 @@
- import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
+import "./Home.css";
 
-const motivationalLines = [
-  { text: "Let your money work for you while you sleep 💰", emoji: "💰" },
-  { text: "Risk, when managed, becomes opportunity 📈", emoji: "📈" },
-  { text: "Let's earn more with smart trading bots 🤖", emoji: "🤖" },
-  { text: "Automate your way to financial freedom 🚀", emoji: "🚀" },
-  { text: "24/7 trading never stops, neither should your profits ⏰", emoji: "⏰" },
-  { text: "Turn market volatility into your advantage 🎯", emoji: "🎯" },
-  { text: "Build wealth while you live your life 🏖️", emoji: "🏖️" },
-  { text: "Smart algorithms, smarter profits 🧠", emoji: "🧠" },
-  { text: "Trade like a pro, even when you're a beginner 🌟", emoji: "🌟" },
-  { text: "The market never sleeps, and neither do your bots 🌙", emoji: "🌙" },
-  { text: "Passive income through active trading 💎", emoji: "💎" },
-  { text: "Master the market with AI-powered precision ⚡", emoji: "⚡" },
-  { text: "Your wealth journey starts with automation 🌱", emoji: "🌱" },
-  { text: "Financial freedom is just one bot away 🔓", emoji: "🔓" },
-  { text: "Let algorithms handle the stress while you enjoy life 🍹", emoji: "🍹" },
-  { text: "Transform trading hours into freedom hours ⏳", emoji: "⏳" }
+const MOTIVATIONAL = [
+  { text: "Let's earn more 💰", emoji: "" },
+  { text: "Be bold. Take smart risks 🚀", emoji: "" },
+  { text: "Safe money grows slow 🐢", emoji: "" },
+  { text: "Discipline beats luck 🎯", emoji: "" },
+  { text: "Make your capital work harder ⚙️", emoji: "" },
 ];
 
 export default function Home() {
-  const [currentQuote, setCurrentQuote] = useState(0);
+  const [current, setCurrent] = useState(0);
+  const revealRefs = useRef([]);
+  const statsRef = useRef(null);
+  const statsDone = useRef(false);
+  const touchStartX = useRef(null);
 
+  /* ---------------- hex canvas ---------------- */
+  useEffect(() => {
+    if (!document.querySelector('script[src="/hexFlow.js"]')) {
+      const s = document.createElement("script");
+      s.src = "/hexFlow.js";
+      s.async = true;
+      document.head.appendChild(s);
+    }
+
+    const resize = () => {
+      const c = document.getElementById("hexagonCanvas");
+      if (!c) return;
+      const dpr = window.devicePixelRatio || 1;
+      c.width = innerWidth * dpr;
+      c.height = innerHeight * dpr;
+      c.style.width = "100vw";
+      c.style.height = "100vh";
+    };
+
+    resize();
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, []);
+
+  /* ---------------- reveal ---------------- */
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      (entries) =>
+        entries.forEach((e) => e.isIntersecting && e.target.classList.add("in")),
+      { threshold: 0.2 }
+    );
+    revealRefs.current.forEach((el) => el && io.observe(el));
+    return () => io.disconnect();
+  }, []);
+
+  /* ---------------- stats ---------------- */
+  useEffect(() => {
+    if (!statsRef.current) return;
+
+    const io = new IntersectionObserver(
+      ([e], obs) => {
+        if (!e.isIntersecting || statsDone.current) return;
+        statsDone.current = true;
+
+        statsRef.current.querySelectorAll("[data-to]").forEach((el) => {
+          const to = +el.dataset.to;
+          const start = performance.now();
+          const dur = 1400;
+
+          const tick = (t) => {
+            const p = Math.min(1, (t - start) / dur);
+            el.textContent =
+              to % 1 ? (to * p).toFixed(1) : Math.round(to * p);
+            if (p < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        });
+
+        obs.disconnect();
+      },
+      { threshold: 0.35 }
+    );
+
+    io.observe(statsRef.current);
+    return () => io.disconnect();
+  }, []);
+
+  /* ---------------- slider ---------------- */
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentQuote((prev) => (prev + 1) % motivationalLines.length);
-    }, 5000);
+      setCurrent((prev) => (prev + 1) % MOTIVATIONAL.length);
+    }, 4000); // Change quote every 4 seconds
+
     return () => clearInterval(interval);
   }, []);
 
+  const go = useCallback(
+    (i) =>
+      setCurrent(
+        ((i % MOTIVATIONAL.length) + MOTIVATIONAL.length) %
+          MOTIVATIONAL.length
+      ),
+    []
+  );
+
+  const onTouchStart = (e) => (touchStartX.current = e.touches[0].clientX);
+  const onTouchEnd = (e) => {
+    if (touchStartX.current == null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) > 40) go(current + (dx > 0 ? -1 : 1));
+    touchStartX.current = null;
+  };
+
+  /* ---------------- tilt ---------------- */
+  const tilt = (e) => {
+    const el = e.currentTarget;
+    const r = el.getBoundingClientRect();
+    const rx = ((e.clientY - r.top) / r.height - 0.5) * -8;
+    const ry = ((e.clientX - r.left) / r.width - 0.5) * 12;
+    el.style.transform = perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.02);
+  };
+
   return (
-    <div style={{ padding: 24, color: "#fff" }}>
-      {/* Hero Section */}
-      <div className="glass-panel" style={{ textAlign: "center", marginBottom: 32 }}>
-        <h1 style={{ marginTop: 0, fontSize: 52, marginBottom: 12 }}>
-          Grab<span className="x">X</span>
-        </h1>
-        <p style={{ margin: 0, color: "#cfd3d8", fontSize: 18, marginBottom: 24 }}>
-          Trading bots, real-time prices, and strategy controls.
-        </p>
-        <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-          <Link className="cta-btn" to="/bots">Explore Bots</Link>
-          <Link
-            className="cta-btn"
-            to="/custom-bot"
-            style={{ background: "transparent", border: "1px solid rgba(93,169,255,0.3)", color: "#5da9ff" }}
-          >
-            Build Custom Bot
-          </Link>
+    <div className="home-root">
+      <canvas id="hexagonCanvas" style={{ pointerEvents: 'none' }} />
+      <div className="bg-overlay" />
+      {/* HERO */}
+      <section className="hero">
+        <div className="hero-inner">
+          <h1>Trading bots that<br />move with the market</h1>
+          <div className="hero-line" />
+          <h2>not against it.</h2>
+          <p>
+            Adaptive algorithms that evolve with market conditions in real time,
+            protecting your capital while maximizing opportunity.
+          </p>
+          <div className="cta-row">
+            <Link to="/bots" className="cta-main">Explore Bots</Link>
+            <Link to="/custom-bot" className="cta-ghost">Build Custom Bot</Link>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* Motivational Lines Section */}
-      <div className="glass-panel" style={{ textAlign: "center", marginBottom: 32, padding: "32px 24px" }}>
-        <div style={{ fontSize: 32, marginBottom: 16 }}>
-          {motivationalLines[currentQuote].emoji}
-        </div>
-        <div style={{ fontSize: 24, fontWeight: "600", color: "#5da9ff", marginBottom: 16, lineHeight: 1.4 }}>
-          {motivationalLines[currentQuote].text}
-        </div>
-        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 16 }}>
-          {motivationalLines.map((_, index) => (
-            <div
-              key={index}
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                background: index === currentQuote ? "#5da9ff" : "rgba(255,255,255,0.2)",
-                cursor: "pointer"
-              }}
-              onClick={() => setCurrentQuote(index)}
-            />
-          ))}
-        </div>
-      </div>
+      {/* SLIDER */}
+      <section className="section">
+        <div
+          ref={(e) => (revealRefs.current[0] = e)}
+          className="reveal glass slider"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          <div className="slider-left">
+            <div className="slider-emoji">{MOTIVATIONAL[current].emoji}</div>
+            <div className="slider-text">{MOTIVATIONAL[current].text}</div>
+          </div>
 
-      {/* Goals Section */}
-      <div className="glass-panel" style={{ marginBottom: 32 }}>
-        <h2 style={{ textAlign: "center", marginTop: 0, marginBottom: 32, color: "#5da9ff" }}>
-          Our Mission & Goals
-        </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24 }}>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🎯</div>
-            <h3 style={{ color: "#5da9ff", marginBottom: 12 }}>Empower Traders</h3>
-            <p style={{ color: "#9aa1aa", lineHeight: 1.6 }}>
-              Provide cutting-edge automated trading tools that level the playing field for both beginners and experienced traders.
-            </p>
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🤖</div>
-            <h3 style={{ color: "#5da9ff", marginBottom: 12 }}>Smart Automation</h3>
-            <p style={{ color: "#9aa1aa", lineHeight: 1.6 }}>
-              Leverage AI and machine learning to create intelligent trading bots that adapt to market conditions 24/7.
-            </p>
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
-            <h3 style={{ color: "#5da9ff", marginBottom: 12 }}>Data-Driven</h3>
-            <p style={{ color: "#9aa1aa", lineHeight: 1.6 }}>
-              Make informed decisions with real-time market data, backtesting, and comprehensive performance analytics.
-            </p>
+          <div className="slider-controls">
+            {MOTIVATIONAL.map((_, i) => (
+              <button
+                key={i}
+                className={`dot ${i === current ? "active" : ""}`}
+                onClick={() => go(i)}
+              />
+            ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Features Grid */}
-      <div className="glass-panel" style={{ marginBottom: 32 }}>
-        <h2 style={{ textAlign: "center", marginTop: 0, marginBottom: 32, color: "#5da9ff" }}>
-          Platform Features
-        </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 20 }}>
-          {[
-            { icon: "🚀", title: "Lightning Fast", desc: "Execute trades in milliseconds with optimized infrastructure" },
-            { icon: "🔒", title: "Secure", desc: "Bank-level encryption and security protocols protect your assets" },
-            { icon: "🌍", title: "Global Markets", desc: "Access major exchanges worldwide from a single platform" },
-            { icon: "📈", title: "Advanced Analytics", desc: "Deep insights into your trading performance and strategies" },
-            { icon: "⚡", title: "Real-time Data", desc: "Live price feeds and market updates 24/7" },
-            { icon: "🎛️", title: "Full Control", desc: "Customize every aspect of your trading strategies" }
-          ].map((feature, index) => (
-            <div key={index} style={{ textAlign: "center", padding: "20px 16px" }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>{feature.icon}</div>
-              <h4 style={{ color: "#5da9ff", marginBottom: 8 }}>{feature.title}</h4>
-              <p style={{ color: "#9aa1aa", fontSize: 14, lineHeight: 1.5 }}>{feature.desc}</p>
-            </div>
-          ))}
+      {/* FEATURES */}
+      <section className="section">
+        <div
+          ref={(e) => (revealRefs.current[1] = e)}
+          className="reveal glass"
+        >
+          <h2 className="section-title">Platform Features</h2>
+          <div className="feature-grid">
+            {[
+              ["🚀", "Lightning-fast", "Sub-100ms execution"],
+              ["🔒", "Enterprise-grade", "Encrypted keys & audits"],
+              ["📡", "24/7 Monitoring", "Automated fail-safes"],
+              ["⚙️", "Fully Custom", "Python bots & builder"],
+              ["📈", "Deep Analytics", "Visual backtests"],
+              ["🌍", "Global Markets", "Major exchanges"],
+            ].map(([i, t, s]) => (
+              <div
+                key={t}
+                className="feature"
+                onMouseMove={tilt}
+                onMouseLeave={(e) => (e.currentTarget.style.transform = "none")}
+              >
+                <div className="icon">{i}</div>
+                <strong>{t}</strong>
+                <span>{s}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* Stats Section */}
-      <div className="glass-panel" style={{ marginBottom: 32 }}>
-        <h2 style={{ textAlign: "center", marginTop: 0, marginBottom: 32, color: "#5da9ff" }}>
-          Platform Statistics
-        </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 24, textAlign: "center" }}>
-          <div>
-            <div style={{ fontSize: 36, fontWeight: "bold", color: "#5da9ff", marginBottom: 8 }}>10+</div>
-            <div style={{ color: "#9aa1aa" }}>Trading Strategies</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 36, fontWeight: "bold", color: "#5da9ff", marginBottom: 8 }}>24/7</div>
-            <div style={{ color: "#9aa1aa" }}>Market Monitoring</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 36, fontWeight: "bold", color: "#5da9ff", marginBottom: 8 }}>100ms</div>
-            <div style={{ color: "#9aa1aa" }}>Execution Speed</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 36, fontWeight: "bold", color: "#5da9ff", marginBottom: 8 }}>99.9%</div>
-            <div style={{ color: "#9aa1aa" }}>Uptime</div>
+      {/* STATS */}
+      <section className="section">
+        <div
+          ref={(e) => {
+            revealRefs.current[2] = e;
+            statsRef.current = e;
+          }}
+          className="reveal glass"
+        >
+          <div className="stats-grid">
+            <div><strong data-to="10">0</strong>Strategies</div>
+            <div><strong data-to="24">0</strong>x7 Monitoring</div>
+            <div><strong data-to="100">0</strong>ms Execution</div>
+            <div><strong data-to="99.9">0</strong>% Uptime</div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* CTA Section */}
-      <div className="glass-panel" style={{ textAlign: "center", padding: "40px 24px" }}>
-        <h2 style={{ marginTop: 0, marginBottom: 16, color: "#5da9ff" }}>Ready to Start Trading?</h2>
-        <p style={{ color: "#9aa1aa", marginBottom: 24, fontSize: 16 }}>
-          Join thousands of traders who have automated their strategies with GrabX
-        </p>
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <Link className="cta-btn" to="/bots">Get Started</Link>
-          <Link
-            className="cta-btn"
-            to="/profile"
-            style={{ background: "transparent", border: "1px solid rgba(93,169,255,0.3)", color: "#5da9ff" }}
-          >
-            Create Account
-          </Link>
+      {/* CTA */}
+      <section className="section">
+        <div
+          ref={(e) => (revealRefs.current[3] = e)}
+          className="reveal glass final-cta"
+        >
+          <h2>Ready to trade smarter?</h2>
+          <div className="cta-row">
+            <Link to="/bots" className="cta-main">Get Started — Free</Link>
+            <Link to="/custom-bot" className="cta-ghost">Build Custom Bot</Link>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
