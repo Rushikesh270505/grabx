@@ -116,7 +116,7 @@ export default function Home() {
     const r = el.getBoundingClientRect();
     const rx = ((e.clientY - r.top) / r.height - 0.5) * -8;
     const ry = ((e.clientX - r.left) / r.width - 0.5) * 12;
-    el.style.transform = perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.02);
+    el.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.02)`;
   };
 
   return (
